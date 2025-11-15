@@ -24,6 +24,7 @@ app.get('/', (c) => {
 // Discord interactions endpoint
 app.post('/interactions', async (c) => {
   const env = c.env;
+  const ctx = c.executionCtx;
 
   // Verify Discord request signature
   const isValid = await verifyDiscordRequest(c.req.raw, env.DISCORD_PUBLIC_KEY);
@@ -51,7 +52,7 @@ app.post('/interactions', async (c) => {
 
       switch (commandName) {
         case 'create-task':
-          response = await handleCreateTask(interaction, env);
+          response = await handleCreateTask(interaction, env, ctx);
           break;
 
         case 'list-tasks':
