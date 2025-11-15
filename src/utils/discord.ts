@@ -157,13 +157,13 @@ export function createRepositoryEmbed(repositories: Array<{
  */
 export function createUserInfoEmbed(userInfo: {
   userId: string;
-  organizationId: string;
+  orgId: string;
   email?: string;
 }): Embed {
   const fields: EmbedField[] = [
     {
       name: 'Organization ID',
-      value: userInfo.organizationId,
+      value: userInfo.orgId,
       inline: false,
     },
     {
