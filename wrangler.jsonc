@@ -2,13 +2,13 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tembo-discord-bot",
   "main": "src/index.ts",
-  "compatibility_date": "2025-11-13"
-  // "compatibility_flags": [
-  //   "nodejs_compat"
-  // ],
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
+  "compatibility_date": "2025-11-13",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "vars": {
+    "DISCORD_APPLICATION_ID": "1438564757358645298"
+  },
   // "kv_namespaces": [
   //   {
   //     "binding": "MY_KV_NAMESPACE",
