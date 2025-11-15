@@ -17,7 +17,7 @@ export async function handleListRepositories(
     const result = await listRepositories(temboClient);
 
     // Create embed response
-    const embed = createRepositoryEmbed(result.repositories || []);
+    const embed = createRepositoryEmbed(result.codeRepositories || []);
 
     return createEmbedResponse(embed);
   } catch (error) {

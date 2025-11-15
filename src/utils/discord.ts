@@ -70,33 +70,52 @@ export function createSuccessResponse(message: string, ephemeral = false): Inter
  */
 export function createTaskEmbed(task: {
   id: string;
-  title: string;
-  description: string;
-  status: string;
+  title?: string;
+  description?: string;
+  prompt?: string;
+  status?: string;
   createdAt: string;
   updatedAt: string;
+  agent?: string;
 }): Embed {
+  const taskTitle = task.title || 'Task Created';
+  const taskDescription = task.description || task.prompt || 'No description provided';
+  
+  const fields: EmbedField[] = [
+    {
+      name: 'Task ID',
+      value: task.id,
+      inline: false,
+    },
+  ];
+
+  if (task.status) {
+    fields.push({
+      name: 'Status',
+      value: task.status,
+      inline: true,
+    });
+  }
+
+  if (task.agent) {
+    fields.push({
+      name: 'Agent',
+      value: task.agent,
+      inline: true,
+    });
+  }
+
+  fields.push({
+    name: 'Created',
+    value: formatDate(task.createdAt),
+    inline: true,
+  });
+
   return {
-    title: task.title || 'Task',
-    description: task.description || 'No description provided',
-    color: getStatusColor(task.status),
-    fields: [
-      {
-        name: 'Task ID',
-        value: task.id,
-        inline: false,
-      },
-      {
-        name: 'Status',
-        value: task.status,
-        inline: true,
-      },
-      {
-        name: 'Created',
-        value: formatDate(task.createdAt),
-        inline: true,
-      },
-    ],
+    title: taskTitle,
+    description: truncate(taskDescription, 200),
+    color: task.status ? getStatusColor(task.status) : 0x5865f2,
+    fields,
     timestamp: task.updatedAt,
   };
 }
@@ -136,11 +155,16 @@ export function createRepositoryEmbed(repositories: Array<{
   id: string;
   name: string;
   url: string;
-  provider: string;
+  branch?: string;
+  description?: string;
+  integration?: {
+    type: string;
+    name: string;
+  };
 }>): Embed {
   const fields: EmbedField[] = repositories.map((repo) => ({
     name: repo.name,
-    value: `**Provider:** ${repo.provider}\n**URL:** ${repo.url}`,
+    value: `**Provider:** ${repo.integration?.type || 'Unknown'}\n**URL:** ${repo.url}\n**Branch:** ${repo.branch || 'N/A'}${repo.description ? `\n**Description:** ${repo.description}` : ''}`,
     inline: false,
   }));
 
