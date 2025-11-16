@@ -1,5 +1,7 @@
 import {
 	ApplicationCommandOptionType,
+	ApplicationIntegrationType,
+	InteractionContextType,
 	type RESTPostAPIApplicationCommandsJSONBody,
 } from "discord-api-types/v10";
 
@@ -7,6 +9,15 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 	{
 		name: "task",
 		description: "Manage Tembo tasks",
+		integration_types: [
+			ApplicationIntegrationType.GuildInstall,
+			ApplicationIntegrationType.UserInstall,
+		],
+		contexts: [
+			InteractionContextType.Guild,
+			InteractionContextType.BotDM,
+			InteractionContextType.PrivateChannel,
+		],
 		options: [
 			{
 				type: ApplicationCommandOptionType.Subcommand,
@@ -116,6 +127,15 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 	{
 		name: "repositories",
 		description: "Manage Tembo repositories",
+		integration_types: [
+			ApplicationIntegrationType.GuildInstall,
+			ApplicationIntegrationType.UserInstall,
+		],
+		contexts: [
+			InteractionContextType.Guild,
+			InteractionContextType.BotDM,
+			InteractionContextType.PrivateChannel,
+		],
 		options: [
 			{
 				type: ApplicationCommandOptionType.Subcommand,
@@ -135,6 +155,15 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 	{
 		name: "whoami",
 		description: "Get your current Tembo user information",
+		integration_types: [
+			ApplicationIntegrationType.GuildInstall,
+			ApplicationIntegrationType.UserInstall,
+		],
+		contexts: [
+			InteractionContextType.Guild,
+			InteractionContextType.BotDM,
+			InteractionContextType.PrivateChannel,
+		],
 		options: [
 			{
 				type: ApplicationCommandOptionType.Boolean,

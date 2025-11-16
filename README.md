@@ -12,6 +12,7 @@ Built with clean architecture, full type safety, comprehensive error handling, a
 - 📦 **Task Management**: Create, list, and search Tembo tasks
 - 🗂️ **Repository Management**: View connected repositories
 - 👤 **User Info**: Get your Tembo account information
+- 👥 **User Installs**: Supports both server and user installs - use commands in DMs or servers
 - ✅ **Type Safe**: Full TypeScript with strict mode and proper types
 - 🧪 **Tested**: 57 unit tests with 100% pass rate
 - 📝 **Structured Logging**: JSON logs for production observability
@@ -150,13 +151,23 @@ Copy the deployed URL (e.g., `https://your-bot.workers.dev`).
 5. Click **"Save Changes"**
 6. Discord will verify the endpoint (you'll see a checkmark if successful)
 
-### 8. Invite Bot to Your Server
+### 8. Invite Bot to Your Server (or Install as User App)
 
+#### Server Installation (Guild Install)
 1. In Discord Developer Portal, go to **"OAuth2"** → **"URL Generator"**
 2. Select scopes: `bot`, `applications.commands`
 3. Select bot permissions: `Send Messages`, `Use Slash Commands`
 4. Copy the generated URL and open it in your browser
 5. Select your server and authorize
+
+#### User Installation (User Install)
+The bot also supports **user installs**, allowing users to install it directly to their account for use in DMs and servers:
+
+1. Users can install the app directly from Discord's App Directory or via a user install link
+2. Commands will work in both DMs and servers where the user has access
+3. No server permissions required - users can use commands in their own DMs
+
+**Note**: Commands are configured to support both guild installs and user installs. After registering commands with `bun run register-commands`, they will be available for both installation types.
 
 ### 9. Test the Bot
 
