@@ -5,7 +5,12 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "register-commands": "bun run src/scripts/register-commands.ts"
+    "register-commands": "bun run src/scripts/register-commands.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "type-check": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@tembo-io/sdk": "^0.1.2",
@@ -13,6 +18,11 @@
     "hono": "^4.10.5"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251115.0",
+    "@types/node": "^24.10.1",
+    "discord-api-types": "^0.38.33",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.9",
     "wrangler": "^4.48.0"
   }
 }

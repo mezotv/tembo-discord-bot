@@ -1,15 +1,18 @@
 // Script to register Discord slash commands
 
-import { ApplicationCommand, ApplicationCommandOptionType } from '../types/discord';
+import {
+  ApplicationCommandOptionType,
+  type RESTPostAPIApplicationCommandsJSONBody,
+} from 'discord-api-types/v10';
 
 // Define slash commands
-const commands: ApplicationCommand[] = [
+const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
   {
     name: 'create-task',
     description: 'Create a new Tembo task',
     options: [
       {
-        type: ApplicationCommandOptionType.STRING,
+        type: ApplicationCommandOptionType.String,
         name: 'prompt',
         description: 'Description of the task to be performed',
         required: true,
@@ -17,19 +20,19 @@ const commands: ApplicationCommand[] = [
         max_length: 2000,
       },
       {
-        type: ApplicationCommandOptionType.STRING,
+        type: ApplicationCommandOptionType.String,
         name: 'agent',
         description: 'The agent to use for this task (e.g., claudeCode:claude-4-5-sonnet)',
         required: false,
       },
       {
-        type: ApplicationCommandOptionType.STRING,
+        type: ApplicationCommandOptionType.String,
         name: 'repositories',
         description: 'Comma-separated list of repository URLs',
         required: false,
       },
       {
-        type: ApplicationCommandOptionType.STRING,
+        type: ApplicationCommandOptionType.String,
         name: 'branch',
         description: 'Specific git branch to target for this task',
         required: false,
@@ -41,14 +44,14 @@ const commands: ApplicationCommand[] = [
     description: 'List Tembo tasks with pagination',
     options: [
       {
-        type: ApplicationCommandOptionType.INTEGER,
+        type: ApplicationCommandOptionType.Integer,
         name: 'page',
         description: 'Page number to retrieve (default: 1)',
         required: false,
         min_value: 1,
       },
       {
-        type: ApplicationCommandOptionType.INTEGER,
+        type: ApplicationCommandOptionType.Integer,
         name: 'limit',
         description: 'Number of tasks per page (default: 10, max: 100)',
         required: false,
@@ -62,21 +65,21 @@ const commands: ApplicationCommand[] = [
     description: 'Search Tembo tasks by query',
     options: [
       {
-        type: ApplicationCommandOptionType.STRING,
+        type: ApplicationCommandOptionType.String,
         name: 'query',
         description: 'Search query',
         required: true,
         min_length: 1,
       },
       {
-        type: ApplicationCommandOptionType.INTEGER,
+        type: ApplicationCommandOptionType.Integer,
         name: 'page',
         description: 'Page number to retrieve (default: 1)',
         required: false,
         min_value: 1,
       },
       {
-        type: ApplicationCommandOptionType.INTEGER,
+        type: ApplicationCommandOptionType.Integer,
         name: 'limit',
         description: 'Number of results per page (default: 10, max: 100)',
         required: false,
@@ -128,12 +131,12 @@ async function registerCommands() {
       throw new Error(`Failed to register commands: ${response.status} ${response.statusText}\n${errorData}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as Array<{ name: string; description: string }>;
     console.log(`✅ Successfully registered ${data.length} slash command(s)!`);
     console.log('Commands:');
-    data.forEach((cmd: any) => {
+    for (const cmd of data) {
       console.log(`  - /${cmd.name}: ${cmd.description}`);
-    });
+    }
   } catch (error) {
     console.error('❌ Error registering commands:', error);
     process.exit(1);
