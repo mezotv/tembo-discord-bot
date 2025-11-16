@@ -1,148 +1,197 @@
-// Script to register Discord slash commands
-
 import {
-  ApplicationCommandOptionType,
-  type RESTPostAPIApplicationCommandsJSONBody,
-} from 'discord-api-types/v10';
+	ApplicationCommandOptionType,
+	type RESTPostAPIApplicationCommandsJSONBody,
+} from "discord-api-types/v10";
 
-// Define slash commands
 const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
-  {
-    name: 'create-task',
-    description: 'Create a new Tembo task',
-    options: [
-      {
-        type: ApplicationCommandOptionType.String,
-        name: 'prompt',
-        description: 'Description of the task to be performed',
-        required: true,
-        min_length: 1,
-        max_length: 2000,
-      },
-      {
-        type: ApplicationCommandOptionType.String,
-        name: 'agent',
-        description: 'The agent to use for this task (e.g., claudeCode:claude-4-5-sonnet)',
-        required: false,
-      },
-      {
-        type: ApplicationCommandOptionType.String,
-        name: 'repositories',
-        description: 'Comma-separated list of repository URLs',
-        required: false,
-      },
-      {
-        type: ApplicationCommandOptionType.String,
-        name: 'branch',
-        description: 'Specific git branch to target for this task',
-        required: false,
-      },
-    ],
-  },
-  {
-    name: 'list-tasks',
-    description: 'List Tembo tasks with pagination',
-    options: [
-      {
-        type: ApplicationCommandOptionType.Integer,
-        name: 'page',
-        description: 'Page number to retrieve (default: 1)',
-        required: false,
-        min_value: 1,
-      },
-      {
-        type: ApplicationCommandOptionType.Integer,
-        name: 'limit',
-        description: 'Number of tasks per page (default: 10, max: 100)',
-        required: false,
-        min_value: 1,
-        max_value: 100,
-      },
-    ],
-  },
-  {
-    name: 'search-tasks',
-    description: 'Search Tembo tasks by query',
-    options: [
-      {
-        type: ApplicationCommandOptionType.String,
-        name: 'query',
-        description: 'Search query',
-        required: true,
-        min_length: 1,
-      },
-      {
-        type: ApplicationCommandOptionType.Integer,
-        name: 'page',
-        description: 'Page number to retrieve (default: 1)',
-        required: false,
-        min_value: 1,
-      },
-      {
-        type: ApplicationCommandOptionType.Integer,
-        name: 'limit',
-        description: 'Number of results per page (default: 10, max: 100)',
-        required: false,
-        min_value: 1,
-        max_value: 100,
-      },
-    ],
-  },
-  {
-    name: 'list-repositories',
-    description: 'List available repositories from your Tembo account',
-  },
-  {
-    name: 'whoami',
-    description: 'Get your current Tembo user information',
-  },
+	{
+		name: "task",
+		description: "Manage Tembo tasks",
+		options: [
+			{
+				type: ApplicationCommandOptionType.Subcommand,
+				name: "create",
+				description: "Create a new Tembo task",
+				options: [
+					{
+						type: ApplicationCommandOptionType.String,
+						name: "prompt",
+						description: "Description of the task to be performed",
+						required: true,
+						min_length: 1,
+						max_length: 2000,
+					},
+					{
+						type: ApplicationCommandOptionType.String,
+						name: "agent",
+						description:
+							"The agent to use for this task (e.g., claudeCode:claude-4-5-sonnet)",
+						required: false,
+					},
+					{
+						type: ApplicationCommandOptionType.String,
+						name: "repositories",
+						description: "Comma-separated list of repository URLs",
+						required: false,
+					},
+					{
+						type: ApplicationCommandOptionType.String,
+						name: "branch",
+						description: "Specific git branch to target for this task",
+						required: false,
+					},
+					{
+						type: ApplicationCommandOptionType.Boolean,
+						name: "ephemeral",
+						description: "Whether to send the response as an ephemeral message",
+						required: false,
+					},
+				],
+			},
+			{
+				type: ApplicationCommandOptionType.Subcommand,
+				name: "list",
+				description: "List Tembo tasks with pagination",
+				options: [
+					{
+						type: ApplicationCommandOptionType.Integer,
+						name: "page",
+						description: "Page number to retrieve (default: 1)",
+						required: false,
+						min_value: 1,
+					},
+					{
+						type: ApplicationCommandOptionType.Integer,
+						name: "limit",
+						description: "Number of tasks per page (default: 10, max: 100)",
+						required: false,
+						min_value: 1,
+						max_value: 100,
+					},
+					{
+						type: ApplicationCommandOptionType.Boolean,
+						name: "ephemeral",
+						description: "Whether to send the response as an ephemeral message",
+						required: false,
+					},
+				],
+			},
+			{
+				type: ApplicationCommandOptionType.Subcommand,
+				name: "search",
+				description: "Search Tembo tasks by query",
+				options: [
+					{
+						type: ApplicationCommandOptionType.String,
+						name: "query",
+						description: "Search query",
+						required: true,
+						min_length: 1,
+					},
+					{
+						type: ApplicationCommandOptionType.Integer,
+						name: "page",
+						description: "Page number to retrieve (default: 1)",
+						required: false,
+						min_value: 1,
+					},
+					{
+						type: ApplicationCommandOptionType.Integer,
+						name: "limit",
+						description: "Number of results per page (default: 10, max: 100)",
+						required: false,
+						min_value: 1,
+						max_value: 100,
+					},
+					{
+						type: ApplicationCommandOptionType.Boolean,
+						name: "ephemeral",
+						description: "Whether to send the response as an ephemeral message",
+						required: false,
+					},
+				],
+			},
+		],
+	},
+	{
+		name: "repositories",
+		description: "Manage Tembo repositories",
+		options: [
+			{
+				type: ApplicationCommandOptionType.Subcommand,
+				name: "list",
+				description: "List available repositories from your Tembo account",
+				options: [
+					{
+						type: ApplicationCommandOptionType.Boolean,
+						name: "ephemeral",
+						description: "Whether to send the response as an ephemeral message",
+						required: false,
+					},
+				],
+			},
+		],
+	},
+	{
+		name: "whoami",
+		description: "Get your current Tembo user information",
+		options: [
+			{
+				type: ApplicationCommandOptionType.Boolean,
+				name: "ephemeral",
+				description: "Whether to send the response as an ephemeral message",
+				required: false,
+			},
+		],
+	},
 ];
 
-// Main function to register commands
 async function registerCommands() {
-  // Get environment variables
-  const applicationId = process.env.DISCORD_APPLICATION_ID;
-  const botToken = process.env.DISCORD_BOT_TOKEN;
+	const applicationId = process.env.DISCORD_APPLICATION_ID;
+	const botToken = process.env.DISCORD_BOT_TOKEN;
 
-  if (!applicationId || !botToken) {
-    console.error('Error: Missing required environment variables.');
-    console.error('Please set DISCORD_APPLICATION_ID and DISCORD_BOT_TOKEN');
-    process.exit(1);
-  }
+	if (!applicationId || !botToken) {
+		console.error("Error: Missing required environment variables.");
+		console.error("Please set DISCORD_APPLICATION_ID and DISCORD_BOT_TOKEN");
+		process.exit(1);
+	}
 
-  const url = `https://discord.com/api/v10/applications/${applicationId}/commands`;
+	const url = `https://discord.com/api/v10/applications/${applicationId}/commands`;
 
-  try {
-    console.log('Registering slash commands...');
-    console.log(`URL: ${url}`);
-    console.log(`Commands to register: ${commands.length}`);
+	try {
+		console.log("Registering slash commands...");
+		console.log(`URL: ${url}`);
+		console.log(`Commands to register: ${commands.length}`);
 
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bot ${botToken}`,
-      },
-      body: JSON.stringify(commands),
-    });
+		const response = await fetch(url, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bot ${botToken}`,
+			},
+			body: JSON.stringify(commands),
+		});
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`Failed to register commands: ${response.status} ${response.statusText}\n${errorData}`);
-    }
+		if (!response.ok) {
+			const errorData = await response.text();
+			throw new Error(
+				`Failed to register commands: ${response.status} ${response.statusText}\n${errorData}`,
+			);
+		}
 
-    const data = await response.json() as Array<{ name: string; description: string }>;
-    console.log(`✅ Successfully registered ${data.length} slash command(s)!`);
-    console.log('Commands:');
-    for (const cmd of data) {
-      console.log(`  - /${cmd.name}: ${cmd.description}`);
-    }
-  } catch (error) {
-    console.error('❌ Error registering commands:', error);
-    process.exit(1);
-  }
+		const data = (await response.json()) as Array<{
+			name: string;
+			description: string;
+		}>;
+		console.log(`✅ Successfully registered ${data.length} slash command(s)!`);
+		console.log("Commands:");
+		for (const cmd of data) {
+			console.log(`  - /${cmd.name}: ${cmd.description}`);
+		}
+	} catch (error) {
+		console.error("❌ Error registering commands:", error);
+		process.exit(1);
+	}
 }
 
-// Run the registration
 registerCommands();
-

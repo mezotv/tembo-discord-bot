@@ -2,13 +2,12 @@
 // Based on wrangler.jsonc configuration
 
 declare namespace Cloudflare {
-  interface Env {
-    DISCORD_APPLICATION_ID: string;
-    DISCORD_PUBLIC_KEY: string;
-    DISCORD_BOT_TOKEN: string;
-    TEMBO_API_KEY: string;
-  }
+	interface Env {
+		DISCORD_APPLICATION_ID: string;
+		DISCORD_PUBLIC_KEY: string;
+		DISCORD_BOT_TOKEN: string;
+		TEMBO_API_KEY: string;
+	}
 }
 
 interface CloudflareBindings extends Cloudflare.Env {}
-

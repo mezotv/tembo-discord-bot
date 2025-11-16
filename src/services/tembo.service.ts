@@ -1,284 +1,257 @@
-// Tembo service with business logic and proper error handling
-
-import Tembo from '@tembo-io/sdk';
+import Tembo from "@tembo-io/sdk";
 import type {
-  TemboTask,
-  TemboTaskList,
-  TemboTaskSearchResult,
-  TemboRepositoryList,
-  TemboUserInfo,
-  CreateTaskParams,
-  ListTasksParams,
-  SearchTasksParams,
-} from '../types';
-import { handleTemboApiError, TemboApiError } from '../utils/errors';
-import { logger } from '../utils/logger';
+	TemboTask,
+	TemboTaskList,
+	TemboTaskSearchResult,
+	TemboRepositoryList,
+	TemboUserInfo,
+	CreateTaskParams,
+	ListTasksParams,
+	SearchTasksParams,
+} from "../types";
+import { handleTemboApiError, TemboApiError } from "../utils/errors";
+import { logger } from "../utils/logger";
 
-/**
- * Service for interacting with Tembo API
- */
 export class TemboService {
-  constructor(private readonly client: Tembo) {
-    if (!client) {
-      throw new Error('Tembo client is required');
-    }
-  }
+	constructor(private readonly client: Tembo) {
+		if (!client) {
+			throw new Error("Tembo client is required");
+		}
+	}
 
-  /**
-   * Create a new task
-   */
-  async createTask(params: CreateTaskParams): Promise<TemboTask> {
-    const startTime = Date.now();
-    const endpoint = '/task/create';
+	async createTask(params: CreateTaskParams): Promise<TemboTask> {
+		const startTime = Date.now();
+		const endpoint = "/task/create";
 
-    try {
-      logger.info('Creating Tembo task', {
-        prompt: params.prompt.substring(0, 100),
-        agent: params.agent,
-        repositoryCount: params.repositories?.length ?? 0,
-      });
+		try {
+			logger.info("Creating Tembo task", {
+				prompt: params.prompt.substring(0, 100),
+				agent: params.agent,
+				repositoryCount: params.repositories?.length ?? 0,
+			});
 
-      const result = await this.client.task.create({
-        prompt: params.prompt,
-        agent: params.agent,
-        repositories: params.repositories,
-        branch: params.branch,
-        queueRightAway: params.queueRightAway ?? true,
-      });
+			const result = await this.client.task.create({
+				prompt: params.prompt,
+				agent: params.agent,
+				repositories: params.repositories,
+				branch: params.branch,
+				queueRightAway: params.queueRightAway ?? true,
+			});
 
-      const duration = Date.now() - startTime;
-      logger.apiCall(endpoint, 'POST', 200, duration);
+			const duration = Date.now() - startTime;
+			logger.apiCall(endpoint, "POST", 200, duration);
 
-      // Map API response to our internal type
-      const task = this.mapToTemboTask(result);
-      
-      logger.info('Task created successfully', {
-        taskId: task.id,
-        duration,
-      });
+			const task = this.mapToTemboTask(result);
 
-      return task;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      logger.error('Failed to create task', error, {
-        endpoint,
-        duration,
-        prompt: params.prompt.substring(0, 100),
-      });
-      throw handleTemboApiError(error, endpoint);
-    }
-  }
+			logger.info("Task created successfully", {
+				taskId: task.id,
+				duration,
+			});
 
-  /**
-   * List tasks with pagination
-   */
-  async listTasks(params: ListTasksParams = {}): Promise<TemboTaskList> {
-    const startTime = Date.now();
-    const endpoint = '/task/list';
+			return task;
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			logger.error("Failed to create task", error, {
+				endpoint,
+				duration,
+				prompt: params.prompt.substring(0, 100),
+			});
+			throw handleTemboApiError(error, endpoint);
+		}
+	}
 
-    try {
-      logger.info('Listing Tembo tasks', {
-        page: params.page ?? 1,
-        limit: params.limit ?? 10,
-      });
+	async listTasks(params: ListTasksParams = {}): Promise<TemboTaskList> {
+		const startTime = Date.now();
+		const endpoint = "/task/list";
 
-      const result = await this.client.task.list({
-        page: params.page,
-        limit: params.limit,
-      });
+		try {
+			logger.info("Listing Tembo tasks", {
+				page: params.page ?? 1,
+				limit: params.limit ?? 10,
+			});
 
-      const duration = Date.now() - startTime;
-      logger.apiCall(endpoint, 'GET', 200, duration);
+			const result = await this.client.task.list({
+				page: params.page,
+				limit: params.limit,
+			});
 
-      // Type-safe mapping
-      const taskList: TemboTaskList = {
-        issues: Array.isArray(result.issues) ? result.issues.map(t => this.mapToTemboTask(t)) : [],
-        meta: result.meta,
-      };
+			const duration = Date.now() - startTime;
+			logger.apiCall(endpoint, "GET", 200, duration);
 
-      logger.info('Tasks listed successfully', {
-        count: taskList.issues.length,
-        duration,
-      });
+			const taskList: TemboTaskList = {
+				issues: Array.isArray(result.issues)
+					? result.issues.map((t) => this.mapToTemboTask(t))
+					: [],
+				meta: result.meta,
+			};
 
-      return taskList;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      logger.error('Failed to list tasks', error, {
-        endpoint,
-        duration,
-      });
-      throw handleTemboApiError(error, endpoint);
-    }
-  }
+			logger.info("Tasks listed successfully", {
+				count: taskList.issues.length,
+				duration,
+			});
 
-  /**
-   * Search tasks
-   */
-  async searchTasks(params: SearchTasksParams): Promise<TemboTaskSearchResult> {
-    const startTime = Date.now();
-    const endpoint = '/task/search';
+			return taskList;
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			logger.error("Failed to list tasks", error, {
+				endpoint,
+				duration,
+			});
+			throw handleTemboApiError(error, endpoint);
+		}
+	}
 
-    try {
-      logger.info('Searching Tembo tasks', {
-        query: params.query,
-        page: params.page ?? 1,
-        limit: params.limit ?? 10,
-      });
+	async searchTasks(params: SearchTasksParams): Promise<TemboTaskSearchResult> {
+		const startTime = Date.now();
+		const endpoint = "/task/search";
 
-      const result = await this.client.task.search({
-        q: params.query, // Tembo SDK uses 'q' not 'query'
-        page: params.page,
-        limit: params.limit,
-      });
+		try {
+			logger.info("Searching Tembo tasks", {
+				query: params.query,
+				page: params.page ?? 1,
+				limit: params.limit ?? 10,
+			});
 
-      const duration = Date.now() - startTime;
-      logger.apiCall(endpoint, 'GET', 200, duration);
+			const result = await this.client.task.search({
+				q: params.query,
+				page: params.page,
+				limit: params.limit,
+			});
 
-      // Type-safe mapping
-      const searchResult: TemboTaskSearchResult = {
-        issues: Array.isArray(result.issues) ? result.issues.map(t => this.mapToTemboTask(t)) : [],
-        meta: result.meta,
-        query: params.query,
-      };
+			const duration = Date.now() - startTime;
+			logger.apiCall(endpoint, "GET", 200, duration);
 
-      logger.info('Task search completed', {
-        query: params.query,
-        count: searchResult.issues.length,
-        duration,
-      });
+			const searchResult: TemboTaskSearchResult = {
+				issues: Array.isArray(result.issues)
+					? result.issues.map((t) => this.mapToTemboTask(t))
+					: [],
+				meta: result.meta,
+				query: params.query,
+			};
 
-      return searchResult;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      logger.error('Failed to search tasks', error, {
-        endpoint,
-        duration,
-        query: params.query,
-      });
-      throw handleTemboApiError(error, endpoint);
-    }
-  }
+			logger.info("Task search completed", {
+				query: params.query,
+				count: searchResult.issues.length,
+				duration,
+			});
 
-  /**
-   * List repositories
-   */
-  async listRepositories(): Promise<TemboRepositoryList> {
-    const startTime = Date.now();
-    const endpoint = '/repository/list';
+			return searchResult;
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			logger.error("Failed to search tasks", error, {
+				endpoint,
+				duration,
+				query: params.query,
+			});
+			throw handleTemboApiError(error, endpoint);
+		}
+	}
 
-    try {
-      logger.info('Listing repositories');
+	async listRepositories(): Promise<TemboRepositoryList> {
+		const startTime = Date.now();
+		const endpoint = "/repository/list";
 
-      const result = await this.client.repository.list();
+		try {
+			logger.info("Listing repositories");
 
-      const duration = Date.now() - startTime;
-      logger.apiCall(endpoint, 'GET', 200, duration);
+			const result = await this.client.repository.list();
 
-      // Type-safe mapping - handle both 'repositories' and 'codeRepositories'
-      const repos = (result as any).codeRepositories ?? (result as any).repositories ?? [];
-      const repoList: TemboRepositoryList = {
-        codeRepositories: Array.isArray(repos) ? repos : [],
-      };
+			const duration = Date.now() - startTime;
+			logger.apiCall(endpoint, "GET", 200, duration);
 
-      logger.info('Repositories listed successfully', {
-        count: repoList.codeRepositories.length,
-        duration,
-      });
+			const repos =
+				(result as any).codeRepositories ?? (result as any).repositories ?? [];
+			const repoList: TemboRepositoryList = {
+				codeRepositories: Array.isArray(repos) ? repos : [],
+			};
 
-      return repoList;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      logger.error('Failed to list repositories', error, {
-        endpoint,
-        duration,
-      });
-      throw handleTemboApiError(error, endpoint);
-    }
-  }
+			logger.info("Repositories listed successfully", {
+				count: repoList.codeRepositories.length,
+				duration,
+			});
 
-  /**
-   * Get current user information
-   */
-  async getCurrentUser(): Promise<TemboUserInfo> {
-    const startTime = Date.now();
-    const endpoint = '/me';
+			return repoList;
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			logger.error("Failed to list repositories", error, {
+				endpoint,
+				duration,
+			});
+			throw handleTemboApiError(error, endpoint);
+		}
+	}
 
-    try {
-      logger.info('Fetching current user info');
+	async getCurrentUser(): Promise<TemboUserInfo> {
+		const startTime = Date.now();
+		const endpoint = "/me";
 
-      const result = await this.client.me.retrieve();
+		try {
+			logger.info("Fetching current user info");
 
-      const duration = Date.now() - startTime;
-      logger.apiCall(endpoint, 'GET', 200, duration);
+			const result = await this.client.me.retrieve();
 
-      // Map to our type (handle both orgId and organizationId)
-      const userInfo: TemboUserInfo = {
-        userId: (result as any).userId ?? '',
-        orgId: (result as any).orgId ?? (result as any).organizationId ?? '',
-        email: (result as any).email,
-      };
+			const duration = Date.now() - startTime;
+			logger.apiCall(endpoint, "GET", 200, duration);
 
-      logger.info('User info retrieved successfully', {
-        userId: userInfo.userId,
-        duration,
-      });
+			const userInfo: TemboUserInfo = {
+				userId: (result as any).userId ?? "",
+				orgId: (result as any).orgId ?? (result as any).organizationId ?? "",
+				email: (result as any).email,
+			};
 
-      return userInfo;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      logger.error('Failed to fetch user info', error, {
-        endpoint,
-        duration,
-      });
-      throw handleTemboApiError(error, endpoint);
-    }
-  }
+			logger.info("User info retrieved successfully", {
+				userId: userInfo.userId,
+				duration,
+			});
 
-  /**
-   * Map API response to internal TemboTask type
-   */
-  private mapToTemboTask(apiResponse: any): TemboTask {
-    return {
-      id: apiResponse.id ?? '',
-      title: apiResponse.title,
-      description: apiResponse.description ?? apiResponse.prompt,
-      prompt: apiResponse.prompt,
-      status: apiResponse.status,
-      createdAt: apiResponse.createdAt ?? new Date().toISOString(),
-      updatedAt: apiResponse.updatedAt ?? new Date().toISOString(),
-      organizationId: apiResponse.organizationId,
-      agent: apiResponse.agent,
-      hash: apiResponse.hash,
-      metadata: apiResponse.metadata,
-      kind: apiResponse.kind,
-      data: apiResponse.data,
-      targetBranch: apiResponse.targetBranch,
-      sourceBranch: apiResponse.sourceBranch,
-      issueSourceId: apiResponse.issueSourceId,
-      level: apiResponse.level,
-      levelReasoning: apiResponse.levelReasoning,
-      lastSeenAt: apiResponse.lastSeenAt,
-      lastQueuedAt: apiResponse.lastQueuedAt,
-      lastQueuedBy: apiResponse.lastQueuedBy,
-      createdBy: apiResponse.createdBy,
-      sandboxType: apiResponse.sandboxType,
-      mcpServers: apiResponse.mcpServers,
-      solutionType: apiResponse.solutionType,
-      workflowId: apiResponse.workflowId,
-    };
-  }
+			return userInfo;
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			logger.error("Failed to fetch user info", error, {
+				endpoint,
+				duration,
+			});
+			throw handleTemboApiError(error, endpoint);
+		}
+	}
+
+	private mapToTemboTask(apiResponse: any): TemboTask {
+		return {
+			id: apiResponse.id ?? "",
+			title: apiResponse.title,
+			description: apiResponse.description ?? apiResponse.prompt,
+			prompt: apiResponse.prompt,
+			status: apiResponse.status,
+			createdAt: apiResponse.createdAt ?? new Date().toISOString(),
+			updatedAt: apiResponse.updatedAt ?? new Date().toISOString(),
+			organizationId: apiResponse.organizationId,
+			agent: apiResponse.agent,
+			hash: apiResponse.hash,
+			metadata: apiResponse.metadata,
+			kind: apiResponse.kind,
+			data: apiResponse.data,
+			targetBranch: apiResponse.targetBranch,
+			sourceBranch: apiResponse.sourceBranch,
+			issueSourceId: apiResponse.issueSourceId,
+			level: apiResponse.level,
+			levelReasoning: apiResponse.levelReasoning,
+			lastSeenAt: apiResponse.lastSeenAt,
+			lastQueuedAt: apiResponse.lastQueuedAt,
+			lastQueuedBy: apiResponse.lastQueuedBy,
+			createdBy: apiResponse.createdBy,
+			sandboxType: apiResponse.sandboxType,
+			mcpServers: apiResponse.mcpServers,
+			solutionType: apiResponse.solutionType,
+			workflowId: apiResponse.workflowId,
+		};
+	}
 }
 
-/**
- * Create TemboService instance
- */
 export function createTemboService(apiKey: string): TemboService {
-  if (!apiKey || apiKey.trim().length === 0) {
-    throw new TemboApiError('Tembo API key is required', 401, 'client_init');
-  }
+	if (!apiKey || apiKey.trim().length === 0) {
+		throw new TemboApiError("Tembo API key is required", 401, "client_init");
+	}
 
-  const client = new Tembo({ apiKey: apiKey.trim() });
-  return new TemboService(client);
+	const client = new Tembo({ apiKey: apiKey.trim() });
+	return new TemboService(client);
 }
-
