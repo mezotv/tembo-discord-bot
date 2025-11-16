@@ -8,7 +8,7 @@ import type {
 import { InteractionResponseType } from 'discord-api-types/v10';
 import { TemboService } from '../services/tembo.service';
 import { logger } from '../utils/logger';
-import { formatErrorForUser, ValidationError } from '../utils/errors';
+import { formatErrorForUser } from '../utils/errors';
 
 /**
  * Base controller with common functionality
