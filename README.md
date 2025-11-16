@@ -4,19 +4,6 @@ A production-ready Discord bot built on Cloudflare Workers that integrates with 
 
 Built with clean architecture, full type safety, comprehensive error handling, and structured logging.
 
-## ✨ Features
-
-- 🤖 **Serverless**: Runs on Cloudflare Workers for infinite scalability
-- ⚡ **Fast**: HTTP-based Discord interactions with <100ms response times
-- 🔒 **Secure**: Request signature verification for all Discord interactions
-- 📦 **Task Management**: Create, list, and search Tembo tasks
-- 🗂️ **Repository Management**: View connected repositories
-- 👤 **User Info**: Get your Tembo account information
-- 👥 **User Installs**: Supports both server and user installs - use commands in DMs or servers
-- ✅ **Type Safe**: Full TypeScript with strict mode and proper types
-- 🧪 **Tested**: 57 unit tests with 100% pass rate
-- 📝 **Structured Logging**: JSON logs for production observability
-- 🎯 **Clean Architecture**: Layered design with dependency injection
 
 ## 📚 Commands
 
@@ -248,7 +235,7 @@ bun type-check
 
 ### Test Coverage
 
-- **57 unit tests** (100% passing)
+- **57 unit tests** 
 - Covers: Type guards, input validation, error handling
 - Critical paths tested for all commands
 
