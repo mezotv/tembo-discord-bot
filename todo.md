@@ -1,79 +1,84 @@
 # Tembo Discord Bot - TODO
 
-## Completed ✅
+## Current Tasks
 
-- [x] Install required dependencies (@tembo-io/sdk, discord-interactions) and configure environment variables
-- [x] Create TypeScript type definitions for Discord interactions
-- [x] Implement Discord request signature verification middleware
-- [x] Create main interaction handler in src/index.ts with PING response
-- [x] Build Tembo SDK client wrapper in src/lib/tembo.ts with error handling
-- [x] Implement /create-task command handler
-- [x] Implement /list-tasks command handler
-- [x] Implement /search-tasks command handler
-- [x] Implement /list-repositories command handler
-- [x] Implement /whoami command handler
-- [x] Create command registration script in src/scripts/register-commands.ts
-- [x] Add comprehensive error handling and Discord response formatting utilities
-- [x] Create comprehensive README documentation
+### Discord Autocomplete Implementation
 
-## Setup Required (User Action) 🔧
+#### Phase 1: Infrastructure Setup ⏳
+- [ ] Add autocomplete types to `src/types/index.ts`
+- [ ] Create `src/controllers/autocomplete/` directory
+- [ ] Create `AutocompleteController` base class
+- [ ] Add autocomplete routing to `src/index.ts`
+- [ ] Create tests for autocomplete infrastructure
 
-### Before Deployment:
+#### Phase 2: Agent Autocomplete 📋
+- [ ] Create static agent list with common agents
+- [ ] Implement agent filtering logic
+- [ ] Create `agent.autocomplete.ts` handler
+- [ ] Update `/task create` command registration with `autocomplete: true` for agent option
+- [ ] Write unit tests for agent autocomplete
+- [ ] Deploy and test agent autocomplete
 
-1. **Create Discord Application**
-   - Go to https://discord.com/developers/applications
-   - Create a new application
-   - Enable bot and get Bot Token
-   - Copy Application ID and Public Key
+#### Phase 3: Repository Autocomplete 📦
+- [ ] Create repository fetching logic from Tembo API
+- [ ] Implement caching strategy for repositories (1 hour TTL)
+- [ ] Create `repository.autocomplete.ts` handler
+- [ ] Implement repository filtering logic
+- [ ] Update `/task create` command registration with `autocomplete: true` for repositories option
+- [ ] Write unit tests for repository autocomplete
+- [ ] Deploy and test repository autocomplete
 
-2. **Get Tembo API Key**
-   - Log in to Tembo Dashboard
-   - Generate API key from settings
+#### Phase 4: Branch & Search Autocomplete 🌿
+- [ ] Create static branch suggestions (main, master, develop, etc.)
+- [ ] Create `branch.autocomplete.ts` handler
+- [ ] Implement search query suggestions (status keywords)
+- [ ] Update `/task create` command registration with `autocomplete: true` for branch option
+- [ ] Update `/task search` command registration with `autocomplete: true` for query option
+- [ ] Write unit tests for branch and search autocomplete
+- [ ] Deploy and test branch and search autocomplete
 
-3. **Set Environment Variables**
-   - For local development: Create `.env` file
-   - For production: Run `wrangler secret put` commands
+#### Phase 5: Testing & Documentation 📝
+- [ ] Perform end-to-end testing of all autocomplete features
+- [ ] Test response time limits (< 3 seconds)
+- [ ] Test with slow API responses
+- [ ] Test error handling and graceful degradation
+- [ ] Update README.md with autocomplete features
+- [ ] Add screenshots/examples to documentation
+- [ ] Performance testing with large datasets
 
-4. **Register Commands**
-   ```bash
-   bun run register-commands
-   ```
+#### Phase 6: Optimization & Monitoring 🔍
+- [ ] Monitor autocomplete response times in production
+- [ ] Optimize caching strategies based on usage patterns
+- [ ] Add metrics for autocomplete usage
+- [ ] Consider user-specific caching for personalized suggestions
+- [ ] Implement feedback mechanism for autocomplete quality
 
-5. **Deploy to Cloudflare Workers**
-   ```bash
-   bun run deploy
-   ```
+## Future Enhancements
 
-6. **Configure Discord Interactions Endpoint**
-   - Set endpoint URL in Discord Developer Portal
-   - Format: `https://your-worker.workers.dev/interactions`
+### Potential Features
+- [ ] Add user-specific repository suggestions based on usage history
+- [ ] Implement fuzzy matching for better search
+- [ ] Add autocomplete for task IDs (for potential future commands)
+- [ ] Consider autocomplete for agent parameters/configurations
+- [ ] Add autocomplete for organization-specific data
 
-7. **Invite Bot to Server**
-   - Generate OAuth2 URL with bot and applications.commands scopes
-   - Authorize bot in your Discord server
+### Technical Debt
+- [ ] Review and optimize error handling across all controllers
+- [ ] Consider implementing request caching layer
+- [ ] Add more comprehensive logging for debugging
 
-## Future Enhancements (Optional) 💡
+### Documentation
+- [ ] Create video tutorial for using autocomplete features
+- [ ] Add troubleshooting section for autocomplete issues
+- [ ] Document caching strategies and TTLs
 
-- [ ] Add task status update notifications
-- [ ] Implement autocomplete for repository selection
-- [ ] Add task filtering by status
-- [ ] Implement task cancellation command
-- [ ] Add user preference storage (KV)
-- [ ] Support per-user Tembo API keys
-- [ ] Add more detailed task information views
-- [ ] Implement button interactions for pagination
-- [ ] Add task progress tracking
-- [ ] Create admin commands for configuration
-- [ ] Add rate limiting per user
-- [ ] Implement caching for repository list
-- [ ] Add detailed logging and monitoring
-- [ ] Create comprehensive testing suite
+## Completed Tasks
 
-## Known Limitations 📝
+- ✅ Research Discord autocomplete functionality
+- ✅ Document autocomplete architecture and implementation strategy
+- ✅ Identify autocomplete use cases for Tembo bot
+- ✅ Create comprehensive research document (AUTOCOMPLETE_RESEARCH.md)
 
-- Task creation is synchronous (may take a few seconds for complex tasks)
-- No real-time task status updates (user must manually check)
-- Repository list is not cached (fetched on every request)
-- No support for task attachments
-- Limited error context (depends on Tembo API responses)
+---
 
+Last Updated: November 18, 2025

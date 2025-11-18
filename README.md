@@ -2,31 +2,36 @@
 
 A production-ready Discord bot built on Cloudflare Workers that integrates with [Tembo](https://tembo.io) to manage tasks directly from Discord using slash commands.
 
-Built with clean architecture, full type safety, comprehensive error handling, and structured logging.
+
+Made by [Anurag Dhungana](anuragd.me) and [Dominik Koch](https://dominikkoch.dev/)
+
+
 
 
 ## 📚 Commands
 
-| Command | Description | Parameters |
-|---------|-------------|------------|
-| `/create-task` | Create a new Tembo task | `prompt` (required), `agent`, `repositories`, `branch` |
-| `/list-tasks` | List your tasks | `page`, `limit` |
-| `/search-tasks` | Search for tasks | `query` (required), `page`, `limit` |
-| `/list-repositories` | List connected repositories | None |
-| `/whoami` | Get your account info | None |
+The bot uses Discord's subcommand structure for better organization:
+
+| Command | Subcommand | Description | Parameters |
+|---------|------------|-------------|------------|
+| `/task` | `create` | Create a new Tembo task | `prompt` (required), `agent`, `repositories`, `branch`, `ephemeral` |
+| `/task` | `list` | List your tasks | `page`, `limit`, `ephemeral` |
+| `/task` | `search` | Search for tasks | `query` (required), `page`, `limit`, `ephemeral` |
+| `/repositories` | `list` | List connected repositories | `ephemeral` |
+| `/whoami` | - | Get your account info | `ephemeral` |
 
 ### Command Examples
 
 ```
-/create-task prompt:"Fix authentication bug" agent:"claudeCode:claude-4-5-sonnet"
+/task create prompt:"Fix authentication bug" agent:"claudeCode:claude-4-5-sonnet"
 
-/list-tasks page:1 limit:10
+/task list page:1 limit:10
 
-/search-tasks query:"authentication" page:1
+/task search query:"authentication" page:1
 
-/list-repositories
+/repositories list
 
-/whoami
+/whoami ephemeral:true
 ```
 
 ---
@@ -109,12 +114,10 @@ bun run register-commands
 
 You should see:
 ```
-✅ Successfully registered 5 slash command(s)!
+✅ Successfully registered 3 slash command(s)!
 Commands:
-  - /create-task: Create a new Tembo task
-  - /list-tasks: List Tembo tasks with pagination
-  - /search-tasks: Search Tembo tasks by query
-  - /list-repositories: List available repositories
+  - /task: Manage Tembo tasks
+  - /repositories: Manage Tembo repositories
   - /whoami: Get your current Tembo user information
 ```
 
@@ -181,37 +184,43 @@ Discord → Entry Point → Controllers → Services → Tembo SDK
 
 ```
 src/
-├── index.ts                     # Main entry point with routing
+├── index.ts                              # Main entry point with routing
 ├── types/
-│   └── index.ts                # Type definitions and guards
+│   └── index.ts                         # Type definitions and guards
 ├── validation/
-│   ├── guards.ts               # Type guard utilities
-│   └── command-options.ts      # Input validators
+│   ├── guards.ts                        # Type guard utilities
+│   └── command-options.ts               # Input validators
 ├── services/
-│   └── tembo.service.ts        # Tembo API business logic
+│   └── tembo.service.ts                 # Tembo API business logic
 ├── controllers/
-│   ├── base.controller.ts      # Shared controller functionality
-│   ├── create-task.controller.ts
-│   ├── list-tasks.controller.ts
-│   ├── search-tasks.controller.ts
-│   ├── list-repositories.controller.ts
-│   └── whoami.controller.ts
+│   ├── base.controller.ts               # Shared controller functionality
+│   ├── index.ts                         # Controller exports
+│   ├── task/
+│   │   └── task.controller.ts          # Task subcommand handlers
+│   ├── repository/
+│   │   └── repositories.controller.ts  # Repository subcommand handlers
+│   └── user/
+│       └── whoami.controller.ts        # User info command handler
 ├── utils/
-│   ├── errors.ts               # Structured error types
-│   ├── logger.ts               # JSON logging
-│   └── verify.ts               # Discord signature verification
+│   ├── errors.ts                        # Structured error types
+│   ├── logger.ts                        # JSON logging
+│   ├── verify.ts                        # Discord signature verification
+│   └── async-handler.ts                # Async error handling utility
 └── scripts/
-    └── register-commands.ts    # Command registration script
+    └── register-commands.ts             # Command registration script
 ```
 
 ### Key Design Decisions
 
-1. **Dependency Injection**: Controllers receive services via constructor for easy testing
-2. **Type Safety**: Uses `discord-api-types/v10` with strict TypeScript (no hardcoded types)
-3. **Validation Layer**: All inputs validated before processing with clear error messages
-4. **Error Handling**: Structured error hierarchy with context and logging
-5. **Structured Logging**: JSON logs for production observability
-6. **Background Processing**: Long operations use `ctx.waitUntil()` to avoid Discord timeouts
+1. **Subcommand Architecture**: Uses Discord's native subcommand groups for better command organization
+2. **Domain-Driven Structure**: Controllers organized by domain (task, repository, user) for better maintainability
+3. **Dependency Injection**: Controllers receive services via constructor for easy testing
+4. **Type Safety**: Uses `discord-api-types/v10` with strict TypeScript (no hardcoded types)
+5. **Validation Layer**: All inputs validated before processing with clear error messages
+6. **Error Handling**: Structured error hierarchy with context and logging
+7. **Structured Logging**: JSON logs for production observability
+8. **Background Processing**: Long operations use `ctx.waitUntil()` to avoid Discord timeouts
+9. **User Installable**: Supports both server installs and user installs for DM usage
 
 ---
 
@@ -285,7 +294,7 @@ bun dev
   "test:watch": "vitest --watch",           // Watch mode
   "test:coverage": "vitest --coverage",     // Coverage report
   "type-check": "tsc --noEmit",            // Type checking
-  "lint": "tsc --noEmit"                   // Lint check
+  "lint": "tsc --noEmit"                   // Lint check (Note: Biome linter configured via biome.json)
 }
 ```
 
@@ -404,6 +413,7 @@ View metrics in the Cloudflare Workers dashboard:
 - **Discord Types**: [discord-api-types](https://github.com/discordjs/discord-api-types) - Official Discord types
 - **Tembo SDK**: [@tembo-io/sdk](https://docs.tembo.io/) - Tembo API client
 - **Testing**: [Vitest](https://vitest.dev/) - Fast unit test framework
+- **Linter**: [Biome](https://biomejs.dev/) - Fast all-in-one linter and formatter
 - **Language**: TypeScript with strict mode
 
 ---
