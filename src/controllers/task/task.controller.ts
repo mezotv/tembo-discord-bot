@@ -98,7 +98,6 @@ export class TaskController extends BaseController {
 			const focusedOption = this.getFocusedOption(interaction.data.options);
 
 			if (focusedOption?.name === "repositories") {
-				// We know repositories is a string option
 				const value = (focusedOption as APIApplicationCommandInteractionDataStringOption).value;
 				return this.handleRepositoriesAutocomplete(value);
 			}
@@ -124,7 +123,6 @@ export class TaskController extends BaseController {
 		if (customId.startsWith("task_list_")) {
 			// Format: task_list_<page>
 			const parts = customId.split("_");
-			// Check if we have enough parts
 			if (parts.length < 3) {
 				return this.createErrorResponse("Invalid button ID format");
 			}
@@ -135,14 +133,42 @@ export class TaskController extends BaseController {
 			}
 
 			const params = { page, limit: 10 };
-			// Note: Component interactions also have a 3s timeout. 
-			// Ideally we should defer here too, but keeping it simple for now.
 			const response = await this.generateTaskListResponse(
 				params,
 				userId,
-				false, // Ephemeral flag doesn't matter for UpdateMessage
+				false, 
 				Date.now(),
-				true, // isUpdate
+				true, 
+			);
+
+			return response;
+		}
+
+		if (customId.startsWith("task_search_")) {
+			// Format: task_search_<page>_<query>
+			const parts = customId.split("_");
+			if (parts.length < 4) {
+				return this.createErrorResponse("Invalid button ID format");
+			}
+			
+			const page = parseInt(parts[2] ?? "");
+			const query = parts.slice(3).join("_"); // Rejoin rest as query in case it contained underscores
+
+			if (isNaN(page)) {
+				return this.createErrorResponse("Invalid page number");
+			}
+
+			if (!query) {
+				return this.createErrorResponse("Invalid search query");
+			}
+
+			const params = { query, page, limit: 10 };
+			const response = await this.generateSearchResponse(
+				params,
+				userId,
+				false,
+				Date.now(),
+				true,
 			);
 
 			return response;
@@ -155,7 +181,6 @@ export class TaskController extends BaseController {
 		currentValue: string,
 	): Promise<APIInteractionResponse> {
 		try {
-			// Fetch repositories from Tembo
 			const result = await this.temboService.listRepositories();
 			const repos = result.codeRepositories;
 
@@ -163,7 +188,7 @@ export class TaskController extends BaseController {
 				.filter((repo) =>
 					repo.url.toLowerCase().includes(currentValue.toLowerCase()),
 				)
-				.slice(0, 21) // Limit to 21
+				.slice(0, 21) 
 				.map((repo) => ({
 					name: repo.url,
 					value: repo.url,
@@ -192,7 +217,7 @@ export class TaskController extends BaseController {
 				agent.name.toLowerCase().includes(currentValue.toLowerCase()) ||
 				agent.value.toLowerCase().includes(currentValue.toLowerCase())
 			)
-			.slice(0, 25); // Discord limit is 25
+			.slice(0, 25); 
 
 		return {
 			type: InteractionResponseType.ApplicationCommandAutocompleteResult,
@@ -548,8 +573,43 @@ export class TaskController extends BaseController {
 							: `${result.issues.length} results`,
 					},
 				};
+
+				const components: any[] = [];
+				if (result.meta && result.meta.totalPages > 1) {
+					const currentPage = result.meta.currentPage;
+					const totalPages = result.meta.totalPages;
+					const query = params.query;
+
+					// Check custom_id length limit (100 chars)
+					// Prefix: task_search_<page>_ (approx 15 chars)
+					// Remaining for query: 85 chars
+					// If query is too long, we disable pagination for now to avoid errors
+					if (query.length <= 80) {
+						components.push({
+							type: ComponentType.ActionRow,
+							components: [
+								{
+									type: ComponentType.Button,
+									custom_id: `task_search_${currentPage - 1}_${query}`,
+									label: "Previous",
+									style: ButtonStyle.Secondary,
+									disabled: currentPage <= 1,
+								},
+								{
+									type: ComponentType.Button,
+									custom_id: `task_search_${currentPage + 1}_${query}`,
+									label: "Next",
+									style: ButtonStyle.Secondary,
+									disabled: currentPage >= totalPages,
+								},
+							],
+						});
+					}
+				}
+
 				body = {
 					embeds: [embed],
+					components: components.length > 0 ? components : undefined,
 					flags: ephemeral ? 64 : undefined,
 				};
 			}
@@ -569,6 +629,7 @@ export class TaskController extends BaseController {
 		userId: string,
 		ephemeral: boolean,
 		startTime: number,
+		isUpdate: boolean = false,
 	): Promise<APIInteractionResponse> {
 		logger.info("Processing task search command", {
 			userId,
@@ -576,6 +637,7 @@ export class TaskController extends BaseController {
 			page: params.page,
 			limit: params.limit,
 			ephemeral,
+			isUpdate,
 		});
 
 		const result = await this.temboService.searchTasks(params);
@@ -583,10 +645,11 @@ export class TaskController extends BaseController {
 		logger.command("task search", userId, true, duration);
 
 		if (!result.issues || result.issues.length === 0) {
-			return this.createSuccessResponse(
-				`🔍 No tasks found matching "${params.query}".\n\nTry a different search query or create a new task with \`/task create\`.`,
-				ephemeral,
-			);
+			const msg = `🔍 No tasks found matching "${params.query}".\n\nTry a different search query or create a new task with \`/task create\`.`;
+			if (isUpdate) {
+				return this.createUpdateMessageResponse([], []);
+			}
+			return this.createSuccessResponse(msg, ephemeral);
 		}
 
 		const embed = {
@@ -614,6 +677,40 @@ export class TaskController extends BaseController {
 			},
 		};
 
-		return this.createEmbedResponse([embed], ephemeral);
+		const components: any[] = [];
+		if (result.meta && result.meta.totalPages > 1) {
+			const currentPage = result.meta.currentPage;
+			const totalPages = result.meta.totalPages;
+			const query = params.query;
+
+			// Check custom_id length limit (100 chars)
+			if (query.length <= 80) {
+				components.push({
+					type: ComponentType.ActionRow,
+					components: [
+						{
+							type: ComponentType.Button,
+							custom_id: `task_search_${currentPage - 1}_${query}`,
+							label: "Previous",
+							style: ButtonStyle.Secondary,
+							disabled: currentPage <= 1,
+						},
+						{
+							type: ComponentType.Button,
+							custom_id: `task_search_${currentPage + 1}_${query}`,
+							label: "Next",
+							style: ButtonStyle.Secondary,
+							disabled: currentPage >= totalPages,
+						},
+					],
+				});
+			}
+		}
+
+		if (isUpdate) {
+			return this.createUpdateMessageResponse([embed], components);
+		}
+
+		return this.createEmbedResponse([embed], ephemeral, components);
 	}
 }
