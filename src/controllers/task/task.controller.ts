@@ -5,6 +5,9 @@ import type {
 	APIApplicationCommandInteractionDataOption,
 	APIMessageComponentInteraction,
 	APIApplicationCommandInteractionDataStringOption,
+	APIEmbed,
+	APIActionRowComponent,
+	APIButtonComponent,
 } from "discord-api-types/v10";
 import {
 	InteractionResponseType,
@@ -20,33 +23,28 @@ import {
 } from "../../validation/command-options";
 import { logger } from "../../utils/logger";
 import { ValidationError } from "../../utils/errors";
-import type { Env } from "../../types";
+import type { Env, ListTasksParams, SearchTasksParams } from "../../types";
 import { updateInteractionResponse } from "../../utils/discord";
 
 const AGENTS = [
-	// Claude Code
 	{ name: "Claude Code (Default) - Balanced", value: "claudeCode:claude-4-5-sonnet" },
 	{ name: "Claude Code - Fastest", value: "claudeCode:claude-4-5-haiku" },
 	{ name: "Claude Code - Complex Tasks", value: "claudeCode:claude-4.1-opus" },
 	{ name: "Claude Code - Efficient", value: "claudeCode:claude-4-sonnet" },
 	
-	// Codex
 	{ name: "Codex (Default) - Balanced", value: "codex:gpt-5-medium" },
 	{ name: "Codex - Fastest", value: "codex:gpt-5-minimal" },
 	{ name: "Codex - Quick", value: "codex:gpt-5-low" },
 	{ name: "Codex - Deep Reasoning", value: "codex:gpt-5-high" },
 	{ name: "Codex - Code Gen", value: "codex:gpt-5-codex" },
 
-	// Opencode
 	{ name: "Opencode (Default) - Balanced", value: "opencode:claude-4-5-sonnet" },
 	{ name: "Opencode - Fastest", value: "opencode:claude-4-5-haiku" },
 	{ name: "Opencode - Complex Tasks", value: "opencode:claude-4.1-opus" },
 	{ name: "Opencode - Efficient", value: "opencode:claude-4-sonnet" },
 
-	// Amp
 	{ name: "Amp - Smart Detection", value: "amp:claude-4-5-sonnet" },
 
-	// Cursor
 	{ name: "Cursor (Default) - Balanced", value: "cursor:claude-4-5-sonnet" },
 	{ name: "Cursor - Complex Tasks", value: "cursor:claude-4.1-opus" },
 	{ name: "Cursor - GPT-5.1", value: "cursor:gpt-5.1" },
@@ -121,38 +119,27 @@ export class TaskController extends BaseController {
 			interaction.member?.user?.id ?? interaction.user?.id ?? "unknown";
 
 		if (customId.startsWith("task_list_")) {
-			// Format: task_list_<page>
 			const parts = customId.split("_");
-			if (parts.length < 3) {
-				return this.createErrorResponse("Invalid button ID format");
-			}
 			const page = parseInt(parts[2] ?? "");
 
 			if (isNaN(page)) {
 				return this.createErrorResponse("Invalid page number");
 			}
 
-			const params = { page, limit: 10 };
-			const response = await this.generateTaskListResponse(
+			const params: ListTasksParams = { page, limit: 10 };
+			return this.generateTaskListResponse(
 				params,
 				userId,
 				false, 
 				Date.now(),
 				true, 
 			);
-
-			return response;
 		}
 
 		if (customId.startsWith("task_search_")) {
-			// Format: task_search_<page>_<query>
 			const parts = customId.split("_");
-			if (parts.length < 4) {
-				return this.createErrorResponse("Invalid button ID format");
-			}
-			
 			const page = parseInt(parts[2] ?? "");
-			const query = parts.slice(3).join("_"); // Rejoin rest as query in case it contained underscores
+			const query = parts.slice(3).join("_");
 
 			if (isNaN(page)) {
 				return this.createErrorResponse("Invalid page number");
@@ -162,16 +149,14 @@ export class TaskController extends BaseController {
 				return this.createErrorResponse("Invalid search query");
 			}
 
-			const params = { query, page, limit: 10 };
-			const response = await this.generateSearchResponse(
+			const params: SearchTasksParams = { query, page, limit: 10 };
+			return this.generateSearchResponse(
 				params,
 				userId,
 				false,
 				Date.now(),
 				true,
 			);
-
-			return response;
 		}
 
 		return super.handleComponent(interaction);
@@ -326,7 +311,7 @@ export class TaskController extends BaseController {
 	}
 
 	private async processTaskList(
-		params: any,
+		params: ListTasksParams,
 		userId: string,
 		ephemeral: boolean,
 		startTime: number,
@@ -345,7 +330,7 @@ export class TaskController extends BaseController {
 					flags: ephemeral ? 64 : undefined,
 				};
 			} else {
-				const embed = {
+				const embed: APIEmbed = {
 					title: "📝 Your Tembo Tasks",
 					description: `Showing ${result.issues.length} task(s)`,
 					fields: result.issues.slice(0, 10).map((task) => ({
@@ -370,7 +355,7 @@ export class TaskController extends BaseController {
 					},
 				};
 
-				const components: any[] = [];
+				const components: APIActionRowComponent<APIButtonComponent>[] = [];
 				if (result.meta && result.meta.totalPages > 1) {
 					const currentPage = result.meta.currentPage;
 					const totalPages = result.meta.totalPages;
@@ -414,7 +399,7 @@ export class TaskController extends BaseController {
 	}
 
 	private async generateTaskListResponse(
-		params: any,
+		params: ListTasksParams,
 		userId: string,
 		ephemeral: boolean,
 		startTime: number,
@@ -441,7 +426,7 @@ export class TaskController extends BaseController {
 			return this.createSuccessResponse(msg, ephemeral);
 		}
 
-		const embed = {
+		const embed: APIEmbed = {
 			title: "📝 Your Tembo Tasks",
 			description: `Showing ${result.issues.length} task(s)`,
 			fields: result.issues.slice(0, 10).map((task) => ({
@@ -466,7 +451,7 @@ export class TaskController extends BaseController {
 			},
 		};
 
-		const components: any[] = [];
+		const components: APIActionRowComponent<APIButtonComponent>[] = [];
 		if (result.meta && result.meta.totalPages > 1) {
 			const currentPage = result.meta.currentPage;
 			const totalPages = result.meta.totalPages;
@@ -530,7 +515,7 @@ export class TaskController extends BaseController {
 	}
 
 	private async processTaskSearch(
-		params: any,
+		params: SearchTasksParams,
 		userId: string,
 		ephemeral: boolean,
 		startTime: number,
@@ -549,7 +534,7 @@ export class TaskController extends BaseController {
 					flags: ephemeral ? 64 : undefined,
 				};
 			} else {
-				const embed = {
+				const embed: APIEmbed = {
 					title: `🔍 Search Results: "${params.query}"`,
 					description: `Found ${result.issues.length} matching task(s)`,
 					fields: result.issues.slice(0, 10).map((task) => ({
@@ -574,16 +559,13 @@ export class TaskController extends BaseController {
 					},
 				};
 
-				const components: any[] = [];
+				const components: APIActionRowComponent<APIButtonComponent>[] = [];
 				if (result.meta && result.meta.totalPages > 1) {
 					const currentPage = result.meta.currentPage;
 					const totalPages = result.meta.totalPages;
 					const query = params.query;
 
 					// Check custom_id length limit (100 chars)
-					// Prefix: task_search_<page>_ (approx 15 chars)
-					// Remaining for query: 85 chars
-					// If query is too long, we disable pagination for now to avoid errors
 					if (query.length <= 80) {
 						components.push({
 							type: ComponentType.ActionRow,
@@ -625,7 +607,7 @@ export class TaskController extends BaseController {
 	}
 
 	private async generateSearchResponse(
-		params: any,
+		params: SearchTasksParams,
 		userId: string,
 		ephemeral: boolean,
 		startTime: number,
@@ -652,7 +634,7 @@ export class TaskController extends BaseController {
 			return this.createSuccessResponse(msg, ephemeral);
 		}
 
-		const embed = {
+		const embed: APIEmbed = {
 			title: `🔍 Search Results: "${params.query}"`,
 			description: `Found ${result.issues.length} matching task(s)`,
 			fields: result.issues.slice(0, 10).map((task) => ({
@@ -677,7 +659,7 @@ export class TaskController extends BaseController {
 			},
 		};
 
-		const components: any[] = [];
+		const components: APIActionRowComponent<APIButtonComponent>[] = [];
 		if (result.meta && result.meta.totalPages > 1) {
 			const currentPage = result.meta.currentPage;
 			const totalPages = result.meta.totalPages;

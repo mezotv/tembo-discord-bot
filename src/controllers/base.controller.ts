@@ -4,6 +4,9 @@ import type {
 	APIApplicationCommandInteractionDataOption,
 	APIApplicationCommandAutocompleteInteraction,
 	APIMessageComponentInteraction,
+	APIEmbed,
+	APIActionRowComponent,
+	APIButtonComponent,
 } from "discord-api-types/v10";
 import {
 	InteractionResponseType,
@@ -102,9 +105,9 @@ export abstract class BaseController {
 	}
 
 	protected createEmbedResponse(
-		embeds: any[],
+		embeds: APIEmbed[],
 		ephemeral: boolean = false,
-		components: any[] = [],
+		components: APIActionRowComponent<APIButtonComponent>[] = [],
 	): APIInteractionResponse {
 		return {
 			type: InteractionResponseType.ChannelMessageWithSource,
@@ -117,8 +120,8 @@ export abstract class BaseController {
 	}
 
 	protected createUpdateMessageResponse(
-		embeds: any[],
-		components: any[] = [],
+		embeds: APIEmbed[],
+		components: APIActionRowComponent<APIButtonComponent>[] = [],
 	): APIInteractionResponse {
 		return {
 			type: InteractionResponseType.UpdateMessage,
@@ -152,7 +155,6 @@ export abstract class BaseController {
 	async handleAutocomplete(
 		interaction: APIApplicationCommandAutocompleteInteraction,
 	): Promise<APIInteractionResponse> {
-		// Default implementation: return empty choices
 		return {
 			type: InteractionResponseType.ApplicationCommandAutocompleteResult,
 			data: {
@@ -164,7 +166,6 @@ export abstract class BaseController {
 	async handleComponent(
 		interaction: APIMessageComponentInteraction,
 	): Promise<APIInteractionResponse> {
-		// Default implementation: error or ignore
 		return this.createErrorResponse("Component interaction not handled.");
 	}
 }
