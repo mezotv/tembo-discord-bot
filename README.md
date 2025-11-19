@@ -5,6 +5,8 @@ A production-ready Discord bot built on Cloudflare Workers that integrates with 
 
 Made by [Anurag Dhungana](anuragd.me) and [Dominik Koch](https://dominikkoch.dev/)
 
+Work in Progress!
+
 
 
 
