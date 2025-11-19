@@ -38,6 +38,7 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 						description:
 							"The agent to use for this task (e.g., claudeCode:claude-4-5-sonnet)",
 						required: false,
+						autocomplete: true,
 					},
 					{
 						type: ApplicationCommandOptionType.String,
@@ -212,11 +213,20 @@ async function registerCommands() {
 		const data = (await response.json()) as Array<{
 			name: string;
 			description: string;
+			options?: any[];
 		}>;
 		console.log(`✅ Successfully registered ${data.length} slash command(s)!`);
 		console.log("Commands:");
 		for (const cmd of data) {
 			console.log(`  - /${cmd.name}: ${cmd.description}`);
+			if (cmd.options) {
+				for (const opt of cmd.options) {
+					if (opt.type === 1 || opt.type === 2) {
+						// Subcommand or SubcommandGroup
+						console.log(`    └─ ${opt.name}: ${opt.description}`);
+					}
+				}
+			}
 		}
 	} catch (error) {
 		console.error("❌ Error registering commands:", error);

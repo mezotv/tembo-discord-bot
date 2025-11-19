@@ -22,6 +22,40 @@ import { ValidationError } from "../../utils/errors";
 import type { Env } from "../../types";
 import { updateInteractionResponse } from "../../utils/discord";
 
+const AGENTS = [
+	// Claude Code
+	{ name: "Claude Code (Default) - Balanced", value: "claudeCode:claude-4-5-sonnet" },
+	{ name: "Claude Code - Fastest", value: "claudeCode:claude-4-5-haiku" },
+	{ name: "Claude Code - Complex Tasks", value: "claudeCode:claude-4.1-opus" },
+	{ name: "Claude Code - Efficient", value: "claudeCode:claude-4-sonnet" },
+	
+	// Codex
+	{ name: "Codex (Default) - Balanced", value: "codex:gpt-5-medium" },
+	{ name: "Codex - Fastest", value: "codex:gpt-5-minimal" },
+	{ name: "Codex - Quick", value: "codex:gpt-5-low" },
+	{ name: "Codex - Deep Reasoning", value: "codex:gpt-5-high" },
+	{ name: "Codex - Code Gen", value: "codex:gpt-5-codex" },
+
+	// Opencode
+	{ name: "Opencode (Default) - Balanced", value: "opencode:claude-4-5-sonnet" },
+	{ name: "Opencode - Fastest", value: "opencode:claude-4-5-haiku" },
+	{ name: "Opencode - Complex Tasks", value: "opencode:claude-4.1-opus" },
+	{ name: "Opencode - Efficient", value: "opencode:claude-4-sonnet" },
+
+	// Amp
+	{ name: "Amp - Smart Detection", value: "amp:claude-4-5-sonnet" },
+
+	// Cursor
+	{ name: "Cursor (Default) - Balanced", value: "cursor:claude-4-5-sonnet" },
+	{ name: "Cursor - Complex Tasks", value: "cursor:claude-4.1-opus" },
+	{ name: "Cursor - GPT-5.1", value: "cursor:gpt-5.1" },
+	{ name: "Cursor - GPT-5.1 Code", value: "cursor:gpt-5.1-codex" },
+	{ name: "Cursor - GPT-5.1 High", value: "cursor:gpt-5.1-codex-high" },
+	{ name: "Cursor - Gemini 3 Pro", value: "cursor:gemini-3-pro" },
+	{ name: "Cursor - Composer", value: "cursor:composer-1" },
+	{ name: "Cursor - Grok", value: "cursor:grok" },
+];
+
 export class TaskController extends BaseController {
 	async handle(
 		interaction: APIChatInputApplicationCommandInteraction,
@@ -64,6 +98,9 @@ export class TaskController extends BaseController {
 
 			if (focusedOption?.name === "repositories") {
 				return this.handleRepositoriesAutocomplete(focusedOption.value as string);
+			}
+			if (focusedOption?.name === "agent") {
+				return this.handleAgentsAutocomplete(focusedOption.value as string);
 			}
 		}
 
@@ -118,7 +155,7 @@ export class TaskController extends BaseController {
 				.filter((repo) =>
 					repo.url.toLowerCase().includes(currentValue.toLowerCase()),
 				)
-				.slice(0, 25) // Discord limit is 25 choices
+				.slice(0, 21) // Limit to 21
 				.map((repo) => ({
 					name: repo.url,
 					value: repo.url,
@@ -137,6 +174,24 @@ export class TaskController extends BaseController {
 				data: { choices: [] },
 			};
 		}
+	}
+
+	private async handleAgentsAutocomplete(
+		currentValue: string,
+	): Promise<APIInteractionResponse> {
+		const filtered = AGENTS
+			.filter((agent) =>
+				agent.name.toLowerCase().includes(currentValue.toLowerCase()) ||
+				agent.value.toLowerCase().includes(currentValue.toLowerCase())
+			)
+			.slice(0, 25); // Discord limit is 25
+
+		return {
+			type: InteractionResponseType.ApplicationCommandAutocompleteResult,
+			data: {
+				choices: filtered,
+			},
+		};
 	}
 
 	private getFocusedOption(
