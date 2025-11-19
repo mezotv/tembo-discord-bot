@@ -4,6 +4,7 @@ import type {
 	APIApplicationCommandAutocompleteInteraction,
 	APIApplicationCommandInteractionDataOption,
 	APIMessageComponentInteraction,
+	APIApplicationCommandInteractionDataStringOption,
 } from "discord-api-types/v10";
 import {
 	InteractionResponseType,
@@ -97,10 +98,13 @@ export class TaskController extends BaseController {
 			const focusedOption = this.getFocusedOption(interaction.data.options);
 
 			if (focusedOption?.name === "repositories") {
-				return this.handleRepositoriesAutocomplete(focusedOption.value as string);
+				// We know repositories is a string option
+				const value = (focusedOption as APIApplicationCommandInteractionDataStringOption).value;
+				return this.handleRepositoriesAutocomplete(value);
 			}
 			if (focusedOption?.name === "agent") {
-				return this.handleAgentsAutocomplete(focusedOption.value as string);
+				const value = (focusedOption as APIApplicationCommandInteractionDataStringOption).value;
+				return this.handleAgentsAutocomplete(value);
 			}
 		}
 
@@ -119,7 +123,12 @@ export class TaskController extends BaseController {
 
 		if (customId.startsWith("task_list_")) {
 			// Format: task_list_<page>
-			const page = parseInt(customId.split("_")[2]);
+			const parts = customId.split("_");
+			// Check if we have enough parts
+			if (parts.length < 3) {
+				return this.createErrorResponse("Invalid button ID format");
+			}
+			const page = parseInt(parts[2] ?? "");
 
 			if (isNaN(page)) {
 				return this.createErrorResponse("Invalid page number");
@@ -128,7 +137,6 @@ export class TaskController extends BaseController {
 			const params = { page, limit: 10 };
 			// Note: Component interactions also have a 3s timeout. 
 			// Ideally we should defer here too, but keeping it simple for now.
-			// If needed, we can update BaseController to pass ctx/env to handleComponent
 			const response = await this.generateTaskListResponse(
 				params,
 				userId,
@@ -205,11 +213,11 @@ export class TaskController extends BaseController {
 				option.options
 			) {
 				for (const subOption of option.options) {
-					if ((subOption as any).focused) {
+					if ("focused" in subOption && subOption.focused === true) {
 						return subOption;
 					}
 				}
-			} else if ((option as any).focused) {
+			} else if ("focused" in option && option.focused === true) {
 				return option;
 			}
 		}
@@ -493,48 +501,7 @@ export class TaskController extends BaseController {
 			return this.createDeferredResponse(ephemeral);
 		}
 
-		// Fallback
-		const result = await this.temboService.searchTasks(params);
-		const duration = Date.now() - startTime;
-		logger.command("task search", userId, true, duration);
-
-		if (!result.issues || result.issues.length === 0) {
-			return this.createSuccessResponse(
-				`🔍 No tasks found matching "${params.query}".\n\nTry a different search query or create a new task with \`/task create\`.`,
-				ephemeral,
-			);
-		}
-
-		// ... (simplified for brevity, in reality should match below)
-		// I'll just reuse the logic or copy it. Since I'm writing the file, I need to write full logic.
-		// To avoid duplication, I could refactor generateSearchResponse but I'll just inline it for now as I did with list.
-		
-		const embed = {
-			title: `🔍 Search Results: "${params.query}"`,
-			description: `Found ${result.issues.length} matching task(s)`,
-			fields: result.issues.slice(0, 10).map((task) => ({
-				name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
-				value: [
-					`**ID:** \`${task.id}\``,
-					task.status ? `**Status:** ${task.status}` : "",
-					task.agent ? `**Agent:** ${task.agent}` : "",
-					task.createdAt
-						? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
-						: "",
-				]
-					.filter(Boolean)
-					.join("\n"),
-				inline: false,
-			})),
-			color: 0x5865f2,
-			footer: {
-				text: result.meta
-					? `Page ${result.meta.currentPage} of ${result.meta.totalPages} • ${result.meta.totalCount} total results`
-					: `${result.issues.length} results`,
-			},
-		};
-
-		return this.createEmbedResponse([embed], ephemeral);
+		return this.generateSearchResponse(params, userId, ephemeral, startTime);
 	}
 
 	private async processTaskSearch(
@@ -595,5 +562,58 @@ export class TaskController extends BaseController {
 				flags: 64,
 			});
 		}
+	}
+
+	private async generateSearchResponse(
+		params: any,
+		userId: string,
+		ephemeral: boolean,
+		startTime: number,
+	): Promise<APIInteractionResponse> {
+		logger.info("Processing task search command", {
+			userId,
+			query: params.query,
+			page: params.page,
+			limit: params.limit,
+			ephemeral,
+		});
+
+		const result = await this.temboService.searchTasks(params);
+		const duration = Date.now() - startTime;
+		logger.command("task search", userId, true, duration);
+
+		if (!result.issues || result.issues.length === 0) {
+			return this.createSuccessResponse(
+				`🔍 No tasks found matching "${params.query}".\n\nTry a different search query or create a new task with \`/task create\`.`,
+				ephemeral,
+			);
+		}
+
+		const embed = {
+			title: `🔍 Search Results: "${params.query}"`,
+			description: `Found ${result.issues.length} matching task(s)`,
+			fields: result.issues.slice(0, 10).map((task) => ({
+				name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
+				value: [
+					`**ID:** \`${task.id}\``,
+					task.status ? `**Status:** ${task.status}` : "",
+					task.agent ? `**Agent:** ${task.agent}` : "",
+					task.createdAt
+						? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
+						: "",
+				]
+					.filter(Boolean)
+					.join("\n"),
+				inline: false,
+			})),
+			color: 0x5865f2,
+			footer: {
+				text: result.meta
+					? `Page ${result.meta.currentPage} of ${result.meta.totalPages} • ${result.meta.totalCount} total results`
+					: `${result.issues.length} results`,
+			},
+		};
+
+		return this.createEmbedResponse([embed], ephemeral);
 	}
 }
