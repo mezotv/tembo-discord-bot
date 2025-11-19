@@ -2,6 +2,8 @@ import type {
 	APIChatInputApplicationCommandInteraction,
 	APIInteractionResponse,
 	APIApplicationCommandInteractionDataOption,
+	APIApplicationCommandAutocompleteInteraction,
+	APIMessageComponentInteraction,
 } from "discord-api-types/v10";
 import {
 	InteractionResponseType,
@@ -10,6 +12,7 @@ import {
 import { TemboService } from "../services/tembo.service";
 import { logger } from "../utils/logger";
 import { formatErrorForUser } from "../utils/errors";
+import type { Env } from "../types";
 
 export abstract class BaseController {
 	constructor(protected readonly temboService: TemboService) {}
@@ -77,6 +80,17 @@ export abstract class BaseController {
 		};
 	}
 
+	protected createDeferredResponse(
+		ephemeral: boolean = false,
+	): APIInteractionResponse {
+		return {
+			type: InteractionResponseType.DeferredChannelMessageWithSource,
+			data: {
+				flags: ephemeral ? 64 : undefined,
+			},
+		};
+	}
+
 	protected createErrorResponse(content: string): APIInteractionResponse {
 		return {
 			type: InteractionResponseType.ChannelMessageWithSource,
@@ -90,12 +104,27 @@ export abstract class BaseController {
 	protected createEmbedResponse(
 		embeds: any[],
 		ephemeral: boolean = false,
+		components: any[] = [],
 	): APIInteractionResponse {
 		return {
 			type: InteractionResponseType.ChannelMessageWithSource,
 			data: {
 				embeds,
 				flags: ephemeral ? 64 : undefined,
+				components: components.length > 0 ? components : undefined,
+			},
+		};
+	}
+
+	protected createUpdateMessageResponse(
+		embeds: any[],
+		components: any[] = [],
+	): APIInteractionResponse {
+		return {
+			type: InteractionResponseType.UpdateMessage,
+			data: {
+				embeds,
+				components: components.length > 0 ? components : undefined,
 			},
 		};
 	}
@@ -117,5 +146,25 @@ export abstract class BaseController {
 	abstract handle(
 		interaction: APIChatInputApplicationCommandInteraction,
 		ctx?: ExecutionContext,
+		env?: Env,
 	): Promise<APIInteractionResponse>;
+
+	async handleAutocomplete(
+		interaction: APIApplicationCommandAutocompleteInteraction,
+	): Promise<APIInteractionResponse> {
+		// Default implementation: return empty choices
+		return {
+			type: InteractionResponseType.ApplicationCommandAutocompleteResult,
+			data: {
+				choices: [],
+			},
+		};
+	}
+
+	async handleComponent(
+		interaction: APIMessageComponentInteraction,
+	): Promise<APIInteractionResponse> {
+		// Default implementation: error or ignore
+		return this.createErrorResponse("Component interaction not handled.");
+	}
 }

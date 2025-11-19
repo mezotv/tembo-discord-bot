@@ -44,6 +44,7 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 						name: "repositories",
 						description: "Comma-separated list of repository URLs",
 						required: false,
+						autocomplete: true,
 					},
 					{
 						type: ApplicationCommandOptionType.String,
