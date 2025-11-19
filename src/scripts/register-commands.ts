@@ -213,7 +213,11 @@ async function registerCommands() {
 		const data = (await response.json()) as Array<{
 			name: string;
 			description: string;
-			options?: any[];
+			options?: {
+				type: number;
+				name: string;
+				description: string;
+			}[];
 		}>;
 		console.log(`✅ Successfully registered ${data.length} slash command(s)!`);
 		console.log("Commands:");
