@@ -141,7 +141,8 @@ app.post("/interactions", async (c) => {
 
 		if (controller) {
 			try {
-				const response = await controller.handleComponent(componentInteraction);
+				// Pass ctx and env to handleComponent for deferred responses
+				const response = await controller.handleComponent(componentInteraction, ctx, env);
 				return c.json(response);
 			} catch (error) {
 				logger.error("Error handling component interaction", error, { customId });

@@ -113,10 +113,14 @@ export class TaskController extends BaseController {
 
 	override async handleComponent(
 		interaction: APIMessageComponentInteraction,
+		ctx?: ExecutionContext,
+		env?: Env,
 	): Promise<APIInteractionResponse> {
 		const customId = interaction.data.custom_id;
 		const userId =
 			interaction.member?.user?.id ?? interaction.user?.id ?? "unknown";
+		const applicationId = env?.DISCORD_APPLICATION_ID;
+		const interactionToken = interaction.token;
 
 		if (customId.startsWith("task_list_")) {
 			const parts = customId.split("_");
@@ -127,6 +131,21 @@ export class TaskController extends BaseController {
 			}
 
 			const params: ListTasksParams = { page, limit: 10 };
+
+			if (ctx && applicationId) {
+				ctx.waitUntil(
+					this.processTaskList(
+						params,
+						userId,
+						false, // Not ephemeral for component updates
+						Date.now(),
+						applicationId,
+						interactionToken,
+					),
+				);
+				return this.createDeferredUpdateResponse();
+			}
+
 			return this.generateTaskListResponse(
 				params,
 				userId,
@@ -150,6 +169,21 @@ export class TaskController extends BaseController {
 			}
 
 			const params: SearchTasksParams = { query, page, limit: 10 };
+
+			if (ctx && applicationId) {
+				ctx.waitUntil(
+					this.processTaskSearch(
+						params,
+						userId,
+						false, // Not ephemeral for component updates
+						Date.now(),
+						applicationId,
+						interactionToken,
+					),
+				);
+				return this.createDeferredUpdateResponse();
+			}
+
 			return this.generateSearchResponse(
 				params,
 				userId,
@@ -159,7 +193,7 @@ export class TaskController extends BaseController {
 			);
 		}
 
-		return super.handleComponent(interaction);
+		return super.handleComponent(interaction, ctx, env);
 	}
 
 	private async handleRepositoriesAutocomplete(

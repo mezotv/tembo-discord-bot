@@ -16,11 +16,13 @@ The bot uses Discord's subcommand structure for better organization:
 
 | Command | Subcommand | Description | Parameters |
 |---------|------------|-------------|------------|
-| `/task` | `create` | Create a new Tembo task | `prompt` (required), `agent`, `repositories`, `branch`, `ephemeral` |
+| `/task` | `create` | Create a new Tembo task | `prompt` (required), `agent` (autocomplete), `repositories` (autocomplete), `branch`, `ephemeral` |
 | `/task` | `list` | List your tasks | `page`, `limit`, `ephemeral` |
 | `/task` | `search` | Search for tasks | `query` (required), `page`, `limit`, `ephemeral` |
 | `/repositories` | `list` | List connected repositories | `ephemeral` |
 | `/whoami` | - | Get your account info | `ephemeral` |
+
+**Note**: The `list` and `search` commands support interactive pagination using Previous/Next buttons.
 
 ### Command Examples
 
@@ -223,6 +225,7 @@ src/
 7. **Structured Logging**: JSON logs for production observability
 8. **Background Processing**: Long operations use `ctx.waitUntil()` to avoid Discord timeouts
 9. **User Installable**: Supports both server installs and user installs for DM usage
+10. **Interactive Components**: Deferred updates for smooth pagination and autocompletion support
 
 ---
 

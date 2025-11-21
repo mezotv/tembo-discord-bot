@@ -94,6 +94,12 @@ export abstract class BaseController {
 		};
 	}
 
+	protected createDeferredUpdateResponse(): APIInteractionResponse {
+		return {
+			type: InteractionResponseType.DeferredMessageUpdate,
+		};
+	}
+
 	protected createErrorResponse(content: string): APIInteractionResponse {
 		return {
 			type: InteractionResponseType.ChannelMessageWithSource,
@@ -165,6 +171,8 @@ export abstract class BaseController {
 
 	async handleComponent(
 		interaction: APIMessageComponentInteraction,
+		ctx?: ExecutionContext,
+		env?: Env,
 	): Promise<APIInteractionResponse> {
 		return this.createErrorResponse("Component interaction not handled.");
 	}
