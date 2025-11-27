@@ -5,6 +5,8 @@ import {
 	type APIInteraction,
 	type APIInteractionResponse,
 	type APIChatInputApplicationCommandInteraction,
+	type APIApplicationCommandAutocompleteInteraction,
+	type APIMessageComponentInteraction,
 } from "discord-api-types/v10";
 import { verifyDiscordRequest } from "./utils/verify";
 import { createTemboService } from "./services/tembo.service";
@@ -79,10 +81,81 @@ app.post("/interactions", async (c) => {
 		}
 
 		const response = await asyncHandler(
-			() => controller.handle(commandInteraction, ctx),
+			() => controller.handle(commandInteraction, ctx, env),
 			commandName,
 			userId,
 		);
+		return c.json(response);
+	}
+
+	if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
+		const autocompleteInteraction =
+			interaction as APIApplicationCommandAutocompleteInteraction;
+		const commandName = autocompleteInteraction.data.name;
+
+		const temboService = createTemboService(env.TEMBO_API_KEY);
+
+		const controllers = {
+			task: new TaskController(temboService),
+			repositories: new RepositoriesController(temboService),
+			whoami: new WhoamiController(temboService),
+		};
+
+		const controller = controllers[commandName as keyof typeof controllers];
+
+		if (controller) {
+			try {
+				const response = await controller.handleAutocomplete(autocompleteInteraction);
+				return c.json(response);
+			} catch (error) {
+				logger.error("Error handling autocomplete", error, { command: commandName });
+			}
+		}
+
+		const response: APIInteractionResponse = {
+			type: InteractionResponseType.ApplicationCommandAutocompleteResult,
+			data: {
+				choices: [],
+			},
+		};
+		return c.json(response);
+	}
+
+	if (interaction.type === InteractionType.MessageComponent) {
+		const componentInteraction = interaction as APIMessageComponentInteraction;
+		const customId = componentInteraction.data.custom_id;
+
+		const temboService = createTemboService(env.TEMBO_API_KEY);
+
+		const controllers = {
+			task: new TaskController(temboService),
+			repositories: new RepositoriesController(temboService),
+			whoami: new WhoamiController(temboService),
+		};
+
+		// Route based on custom_id prefix
+		let controller;
+		if (customId.startsWith("task_")) {
+			controller = controllers.task;
+		}
+
+		if (controller) {
+			try {
+				// Pass ctx and env to handleComponent for deferred responses
+				const response = await controller.handleComponent(componentInteraction, ctx, env);
+				return c.json(response);
+			} catch (error) {
+				logger.error("Error handling component interaction", error, { customId });
+			}
+		}
+
+		const response: APIInteractionResponse = {
+			type: InteractionResponseType.ChannelMessageWithSource,
+			data: {
+				content: "❌ Unknown interaction or handler not found.",
+				flags: 64,
+			},
+		};
 		return c.json(response);
 	}
 
