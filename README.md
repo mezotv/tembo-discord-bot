@@ -234,7 +234,7 @@ xK2jN8pL4mQ6rS9tV1wX3yZ5aC7dE0fG1hI2jK3lM4n=
 Create or update `.dev.vars` file:
 
 ```bash
-# .dev.vars (DO NOT commit this file!)
+
 DISCORD_PUBLIC_KEY=your_discord_public_key
 DISCORD_APPLICATION_ID=your_discord_application_id
 DISCORD_BOT_TOKEN=your_discord_bot_token
@@ -446,7 +446,6 @@ wrangler d1 execute tembo-bot-db --remote --command="SELECT * FROM auth_events O
 
 🔒 **Encryption Master Key**
 
-- Never commit to Git
 - Store securely (password manager, Cloudflare secrets)
 - If lost, all existing encrypted keys become unrecoverable
 - Users would need to re-register
