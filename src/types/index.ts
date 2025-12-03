@@ -97,4 +97,6 @@ export interface Env {
 	DISCORD_PUBLIC_KEY: string;
 	DISCORD_BOT_TOKEN: string;
 	TEMBO_API_KEY: string;
+	ENCRYPTION_MASTER_KEY: string;
+	tembo_bot_db: D1Database;
 }

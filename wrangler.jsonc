@@ -3,10 +3,20 @@
 	"name": "tembo-discord-bot",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-11-13",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"vars": {
 		"DISCORD_APPLICATION_ID": "1438564757358645298"
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "tembo_bot_db",
+			"database_name": "tembo-bot-db",
+			"database_id": "c9244432-c580-4c25-87b7-c966bcea036c",
+			"remote": true
+		}
+	]
 	// "kv_namespaces": [
 	//   {
 	//     "binding": "MY_KV_NAMESPACE",
@@ -17,13 +27,6 @@
 	//   {
 	//     "binding": "MY_BUCKET",
 	//     "bucket_name": "my-bucket"
-	//   }
-	// ],
-	// "d1_databases": [
-	//   {
-	//     "binding": "MY_DB",
-	//     "database_name": "my-database",
-	//     "database_id": ""
 	//   }
 	// ],
 	// "ai": {

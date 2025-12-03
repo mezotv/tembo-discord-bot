@@ -14,10 +14,20 @@ import {
 	TaskController,
 	RepositoriesController,
 	WhoamiController,
+	SetupController,
+	UnregisterController,
+	StatusController,
 } from "./controllers";
+import { AuthService } from "./services/auth.service";
+import { DatabaseService } from "./services/database.service";
+import { EncryptionService } from "./services/encryption.service";
+import { triggerOnboarding } from "./utils/discord";
 import type { Env } from "./types";
 import { logger } from "./utils/logger";
 import { asyncHandler } from "./utils/async-handler";
+
+// Commands that don't require authentication
+const UNAUTHENTICATED_COMMANDS = ["setup", "unregister", "status"];
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -58,12 +68,60 @@ app.post("/interactions", async (c) => {
 			userId,
 		});
 
-		const temboService = createTemboService(env.TEMBO_API_KEY);
+		// Initialize auth services
+		const authService = new AuthService(
+			new DatabaseService(env.tembo_bot_db),
+			new EncryptionService(env.ENCRYPTION_MASTER_KEY),
+		);
 
+		let temboService = null;
+
+		// Check if command requires authentication
+		if (!UNAUTHENTICATED_COMMANDS.includes(commandName)) {
+			// Authenticate user
+			const authResult = await authService.authenticateUser(userId);
+
+			if (!authResult.success) {
+				if (authResult.requiresOnboarding) {
+					// Trigger onboarding DM (async, don't wait)
+					ctx.waitUntil(triggerOnboarding(userId, env.DISCORD_BOT_TOKEN));
+
+					// Send ephemeral response
+					return c.json({
+						type: InteractionResponseType.ChannelMessageWithSource,
+						data: {
+							content:
+								"🔐 **Setup Required!**\n\n" +
+								"I've sent you a DM with instructions to register your Tembo API key.\n\n" +
+								"Please check your direct messages and run `/setup key:YOUR_API_KEY`\n\n" +
+								"**Don't see the DM?** You may have DMs disabled. Run `/setup key:YOUR_API_KEY` here instead.",
+							flags: 64, // Ephemeral
+						},
+					});
+				}
+
+				// Authentication failed for other reasons
+				return c.json({
+					type: InteractionResponseType.ChannelMessageWithSource,
+					data: {
+						content: `❌ ${authResult.error || "Authentication failed. Please use `/setup` to register your API key."}`,
+						flags: 64,
+					},
+				});
+			}
+
+			// User is authenticated - use their TemboService
+			temboService = authResult.temboService!;
+		}
+
+		// Create controllers (auth controllers get authService, others get temboService)
 		const controllers = {
 			task: new TaskController(temboService),
 			repositories: new RepositoriesController(temboService),
 			whoami: new WhoamiController(temboService),
+			setup: new SetupController(authService),
+			unregister: new UnregisterController(authService),
+			status: new StatusController(authService),
 		};
 
 		const controller = controllers[commandName as keyof typeof controllers];
@@ -92,8 +150,33 @@ app.post("/interactions", async (c) => {
 		const autocompleteInteraction =
 			interaction as APIApplicationCommandAutocompleteInteraction;
 		const commandName = autocompleteInteraction.data.name;
+		const userId =
+			autocompleteInteraction.member?.user?.id ??
+			autocompleteInteraction.user?.id ??
+			"unknown";
 
-		const temboService = createTemboService(env.TEMBO_API_KEY);
+		// Autocomplete only for authenticated commands (task, repositories)
+		// Auth services for user lookup
+		const authService = new AuthService(
+			new DatabaseService(env.tembo_bot_db),
+			new EncryptionService(env.ENCRYPTION_MASTER_KEY),
+		);
+
+		// Authenticate user for autocomplete
+		const authResult = await authService.authenticateUser(userId);
+
+		if (!authResult.success) {
+			// Return empty choices if not authenticated
+			const response: APIInteractionResponse = {
+				type: InteractionResponseType.ApplicationCommandAutocompleteResult,
+				data: {
+					choices: [],
+				},
+			};
+			return c.json(response);
+		}
+
+		const temboService = authResult.temboService!;
 
 		const controllers = {
 			task: new TaskController(temboService),
@@ -124,8 +207,31 @@ app.post("/interactions", async (c) => {
 	if (interaction.type === InteractionType.MessageComponent) {
 		const componentInteraction = interaction as APIMessageComponentInteraction;
 		const customId = componentInteraction.data.custom_id;
+		const userId =
+			componentInteraction.member?.user?.id ??
+			componentInteraction.user?.id ??
+			"unknown";
 
-		const temboService = createTemboService(env.TEMBO_API_KEY);
+		// Authenticate user for component interactions
+		const authService = new AuthService(
+			new DatabaseService(env.tembo_bot_db),
+			new EncryptionService(env.ENCRYPTION_MASTER_KEY),
+		);
+
+		const authResult = await authService.authenticateUser(userId);
+
+		if (!authResult.success) {
+			// User not authenticated
+			return c.json({
+				type: InteractionResponseType.ChannelMessageWithSource,
+				data: {
+					content: "❌ You must register your API key to use this feature. Use `/setup key:YOUR_API_KEY`",
+					flags: 64,
+				},
+			});
+		}
+
+		const temboService = authResult.temboService!;
 
 		const controllers = {
 			task: new TaskController(temboService),

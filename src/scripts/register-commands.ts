@@ -175,6 +175,62 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 			},
 		],
 	},
+	{
+		name: "setup",
+		description: "Register or update your Tembo API key",
+		integration_types: [
+			ApplicationIntegrationType.GuildInstall,
+			ApplicationIntegrationType.UserInstall,
+		],
+		contexts: [
+			InteractionContextType.Guild,
+			InteractionContextType.BotDM,
+			InteractionContextType.PrivateChannel,
+		],
+		options: [
+			{
+				type: ApplicationCommandOptionType.String,
+				name: "key",
+				description: "Your Tembo API key",
+				required: true,
+				min_length: 10,
+			},
+		],
+	},
+	{
+		name: "unregister",
+		description: "Remove your registered Tembo API key from the bot",
+		integration_types: [
+			ApplicationIntegrationType.GuildInstall,
+			ApplicationIntegrationType.UserInstall,
+		],
+		contexts: [
+			InteractionContextType.Guild,
+			InteractionContextType.BotDM,
+			InteractionContextType.PrivateChannel,
+		],
+		options: [
+			{
+				type: ApplicationCommandOptionType.Boolean,
+				name: "confirm",
+				description: "Confirm that you want to remove your API key",
+				required: false,
+			},
+		],
+	},
+	{
+		name: "status",
+		description: "Check your Tembo API key registration status",
+		integration_types: [
+			ApplicationIntegrationType.GuildInstall,
+			ApplicationIntegrationType.UserInstall,
+		],
+		contexts: [
+			InteractionContextType.Guild,
+			InteractionContextType.BotDM,
+			InteractionContextType.PrivateChannel,
+		],
+	},
 ];
 
 async function registerCommands() {

@@ -18,7 +18,7 @@ import { formatErrorForUser } from "../utils/errors";
 import type { Env } from "../types";
 
 export abstract class BaseController {
-	constructor(protected readonly temboService: TemboService) {}
+	constructor(protected readonly temboService: TemboService | null) {}
 
 	protected getOptionsMap(
 		options: APIApplicationCommandInteractionDataOption[] | undefined,

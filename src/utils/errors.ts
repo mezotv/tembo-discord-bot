@@ -175,3 +175,54 @@ export function isValidationError(error: unknown): error is ValidationError {
 export function isTemboApiError(error: unknown): error is TemboApiError {
 	return error instanceof TemboApiError;
 }
+
+// ===== Authentication & Encryption Errors =====
+
+export class EncryptionError extends BaseError {
+	constructor(message: string, originalError?: unknown) {
+		super(message, 500, originalError);
+		this.name = "EncryptionError";
+	}
+}
+
+export class DecryptionError extends BaseError {
+	constructor(message: string, originalError?: unknown) {
+		super(message, 500, originalError);
+		this.name = "DecryptionError";
+	}
+}
+
+export class InvalidMasterKeyError extends BaseError {
+	constructor(message: string) {
+		super(message, 500);
+		this.name = "InvalidMasterKeyError";
+	}
+}
+
+export class DatabaseError extends BaseError {
+	constructor(message: string, originalError?: unknown) {
+		super(message, 500, originalError);
+		this.name = "DatabaseError";
+	}
+}
+
+export class UserNotFoundError extends BaseError {
+	constructor(discordUserId: string) {
+		super(`User ${discordUserId} not found in database.`, 404);
+		this.name = "UserNotFoundError";
+	}
+}
+
+export class UserNotAuthenticatedError extends BaseError {
+	constructor(message: string = "User is not authenticated. Please register your API key using /setup.") {
+		super(message, 401);
+		this.name = "UserNotAuthenticatedError";
+	}
+}
+
+export class DatabaseConnectionError extends DatabaseError {
+	constructor(message: string = "Unable to connect to database.", originalError?: unknown) {
+		super(message, originalError);
+		this.name = "DatabaseConnectionError";
+	}
+}
