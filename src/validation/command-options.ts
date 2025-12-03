@@ -29,9 +29,16 @@ export function validateAgent(value: unknown): string | undefined {
 	return value.trim() || undefined;
 }
 
-export function parseRepositories(value: unknown): string[] | undefined {
-	if (value === undefined || value === null) {
-		return undefined;
+export function parseRepositories(value: unknown): string[] {
+	if (value === undefined || value === null || value === "") {
+		throw new ValidationError(
+			"At least one repository is required.\n\n" +
+			"**How to add repositories:**\n" +
+			"1. Visit your Tembo dashboard\n" +
+			"2. Connect your code repositories\n" +
+			"3. Use autocomplete in `/task create repositories:` to select",
+			"repositories",
+		);
 	}
 	if (!isString(value)) {
 		throw new ValidationError(
@@ -46,13 +53,18 @@ export function parseRepositories(value: unknown): string[] | undefined {
 		.filter(Boolean);
 
 	if (repos.length === 0) {
-		return undefined;
+		throw new ValidationError(
+			"At least one repository is required.\n\n" +
+			"Use autocomplete to select a repository or enter a valid repository URL.",
+			"repositories",
+		);
 	}
 
 	for (const repo of repos) {
 		if (!repo.startsWith("http://") && !repo.startsWith("https://")) {
 			throw new ValidationError(
-				`Invalid repository URL: ${repo}`,
+				`Invalid repository URL: ${repo}\n\n` +
+				"Repository URLs must start with http:// or https://",
 				"repositories",
 			);
 		}

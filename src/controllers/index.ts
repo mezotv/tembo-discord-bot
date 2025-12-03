@@ -5,3 +5,4 @@ export { WhoamiController } from "./user/whoami.controller";
 export { SetupController } from "./auth/setup.controller";
 export { UnregisterController } from "./auth/unregister.controller";
 export { StatusController } from "./auth/status.controller";
+export { HelpController } from "./help/help.controller";

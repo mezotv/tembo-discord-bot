@@ -17,6 +17,7 @@ import {
 	SetupController,
 	UnregisterController,
 	StatusController,
+	HelpController,
 } from "./controllers";
 import { AuthService } from "./services/auth.service";
 import { DatabaseService } from "./services/database.service";
@@ -27,7 +28,7 @@ import { logger } from "./utils/logger";
 import { asyncHandler } from "./utils/async-handler";
 
 // Commands that don't require authentication
-const UNAUTHENTICATED_COMMANDS = ["setup", "unregister", "status"];
+const UNAUTHENTICATED_COMMANDS = ["setup", "unregister", "status", "help"];
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -122,6 +123,7 @@ app.post("/interactions", async (c) => {
 			setup: new SetupController(authService),
 			unregister: new UnregisterController(authService),
 			status: new StatusController(authService),
+			help: new HelpController(),
 		};
 
 		const controller = controllers[commandName as keyof typeof controllers];

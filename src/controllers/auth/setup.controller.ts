@@ -3,6 +3,7 @@ import type {
 	APIInteractionResponse,
 	APIEmbed,
 } from "discord-api-types/v10";
+import { InteractionResponseType } from "discord-api-types/v10";
 import { BaseController } from "../base.controller";
 import { AuthService } from "../../services/auth.service";
 import type { Env } from "../../types";
@@ -48,7 +49,14 @@ export class SetupController extends BaseController {
 					interactionToken,
 				),
 			);
-			return this.createDeferredResponse(true); // Ephemeral for security
+			// Return initial loading response (ephemeral for security)
+			return {
+				type: InteractionResponseType.ChannelMessageWithSource,
+				data: {
+					content: "🔐 Validating and registering your API key...",
+					flags: 64, // Ephemeral
+				},
+			};
 		}
 
 		// Fallback: process synchronously if no context (shouldn't happen in production)

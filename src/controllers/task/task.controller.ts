@@ -306,7 +306,7 @@ export class TaskController extends BaseController {
 			`✅ Task submitted successfully!\n\n` +
 				`**Task:** ${params.prompt.substring(0, 150)}${params.prompt.length > 150 ? "..." : ""}\n` +
 				`${params.agent ? `**Agent:** ${params.agent}\n` : ""}` +
-				`${params.repositories && params.repositories.length > 0 ? `**Repositories:** ${params.repositories.length}\n` : ""}` +
+				`**Repositories:** ${params.repositories.length}\n` +
 				`${params.branch ? `**Branch:** ${params.branch}\n` : ""}\n` +
 				`⏳ The task is being created and will be processed by Tembo shortly.\n` +
 				`Use \`/task list\` to see your tasks.`,
@@ -338,7 +338,14 @@ export class TaskController extends BaseController {
 					interactionToken,
 				),
 			);
-			return this.createDeferredResponse(ephemeral);
+			// Return initial loading response
+			return {
+				type: InteractionResponseType.ChannelMessageWithSource,
+				data: {
+					content: "🔄 Loading your tasks...",
+					flags: ephemeral ? 64 : undefined,
+				},
+			};
 		}
 
 		return this.generateTaskListResponse(params, userId, ephemeral, startTime);
@@ -364,9 +371,17 @@ export class TaskController extends BaseController {
 					flags: ephemeral ? 64 : undefined,
 				};
 			} else {
+				const currentPage = result.meta?.currentPage ?? 1;
+				const totalPages = result.meta?.totalPages ?? 1;
+				const totalCount = result.meta?.totalCount ?? result.issues.length;
+				const startItem = ((currentPage - 1) * (result.meta?.pageSize ?? 10)) + 1;
+				const endItem = startItem + result.issues.length - 1;
+
 				const embed: APIEmbed = {
 					title: "📝 Your Tembo Tasks",
-					description: `Showing ${result.issues.length} task(s)`,
+					description: result.meta
+						? `Showing ${startItem}-${endItem} of ${totalCount} total tasks`
+						: `Showing ${result.issues.length} task(s)`,
 					fields: result.issues.slice(0, 10).map((task) => ({
 						name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
 						value: [
@@ -384,30 +399,27 @@ export class TaskController extends BaseController {
 					color: 0x5865f2,
 					footer: {
 						text: result.meta
-							? `Page ${result.meta.currentPage} of ${result.meta.totalPages} • ${result.meta.totalCount} total tasks`
+							? `Page ${currentPage}/${totalPages}`
 							: `${result.issues.length} tasks`,
 					},
 				};
 
 				const components: APIActionRowComponent<APIButtonComponent>[] = [];
 				if (result.meta && result.meta.totalPages > 1) {
-					const currentPage = result.meta.currentPage;
-					const totalPages = result.meta.totalPages;
-
 					components.push({
 						type: ComponentType.ActionRow,
 						components: [
 							{
 								type: ComponentType.Button,
 								custom_id: `task_list_${currentPage - 1}`,
-								label: "Previous",
+								label: `← Page ${currentPage - 1}`,
 								style: ButtonStyle.Secondary,
 								disabled: currentPage <= 1,
 							},
 							{
 								type: ComponentType.Button,
 								custom_id: `task_list_${currentPage + 1}`,
-								label: "Next",
+								label: `Page ${currentPage + 1} →`,
 								style: ButtonStyle.Secondary,
 								disabled: currentPage >= totalPages,
 							},
@@ -460,9 +472,17 @@ export class TaskController extends BaseController {
 			return this.createSuccessResponse(msg, ephemeral);
 		}
 
+		const currentPage = result.meta?.currentPage ?? 1;
+		const totalPages = result.meta?.totalPages ?? 1;
+		const totalCount = result.meta?.totalCount ?? result.issues.length;
+		const startItem = ((currentPage - 1) * (result.meta?.pageSize ?? 10)) + 1;
+		const endItem = startItem + result.issues.length - 1;
+
 		const embed: APIEmbed = {
 			title: "📝 Your Tembo Tasks",
-			description: `Showing ${result.issues.length} task(s)`,
+			description: result.meta
+				? `Showing ${startItem}-${endItem} of ${totalCount} total tasks`
+				: `Showing ${result.issues.length} task(s)`,
 			fields: result.issues.slice(0, 10).map((task) => ({
 				name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
 				value: [
@@ -480,30 +500,27 @@ export class TaskController extends BaseController {
 			color: 0x5865f2,
 			footer: {
 				text: result.meta
-					? `Page ${result.meta.currentPage} of ${result.meta.totalPages} • ${result.meta.totalCount} total tasks`
+					? `Page ${currentPage}/${totalPages}`
 					: `${result.issues.length} tasks`,
 			},
 		};
 
 		const components: APIActionRowComponent<APIButtonComponent>[] = [];
 		if (result.meta && result.meta.totalPages > 1) {
-			const currentPage = result.meta.currentPage;
-			const totalPages = result.meta.totalPages;
-
 			components.push({
 				type: ComponentType.ActionRow,
 				components: [
 					{
 						type: ComponentType.Button,
 						custom_id: `task_list_${currentPage - 1}`,
-						label: "Previous",
+						label: `← Page ${currentPage - 1}`,
 						style: ButtonStyle.Secondary,
 						disabled: currentPage <= 1,
 					},
 					{
 						type: ComponentType.Button,
 						custom_id: `task_list_${currentPage + 1}`,
-						label: "Next",
+						label: `Page ${currentPage + 1} →`,
 						style: ButtonStyle.Secondary,
 						disabled: currentPage >= totalPages,
 					},
@@ -542,7 +559,14 @@ export class TaskController extends BaseController {
 					interactionToken,
 				),
 			);
-			return this.createDeferredResponse(ephemeral);
+			// Return initial loading response
+			return {
+				type: InteractionResponseType.ChannelMessageWithSource,
+				data: {
+					content: `🔍 Searching for "${params.query}"...`,
+					flags: ephemeral ? 64 : undefined,
+				},
+			};
 		}
 
 		return this.generateSearchResponse(params, userId, ephemeral, startTime);
@@ -568,9 +592,17 @@ export class TaskController extends BaseController {
 					flags: ephemeral ? 64 : undefined,
 				};
 			} else {
+				const currentPage = result.meta?.currentPage ?? 1;
+				const totalPages = result.meta?.totalPages ?? 1;
+				const totalCount = result.meta?.totalCount ?? result.issues.length;
+				const startItem = ((currentPage - 1) * (result.meta?.pageSize ?? 10)) + 1;
+				const endItem = startItem + result.issues.length - 1;
+
 				const embed: APIEmbed = {
 					title: `🔍 Search Results: "${params.query}"`,
-					description: `Found ${result.issues.length} matching task(s)`,
+					description: result.meta
+						? `Showing ${startItem}-${endItem} of ${totalCount} matching tasks`
+						: `Found ${result.issues.length} matching task(s)`,
 					fields: result.issues.slice(0, 10).map((task) => ({
 						name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
 						value: [
@@ -588,15 +620,13 @@ export class TaskController extends BaseController {
 					color: 0x5865f2,
 					footer: {
 						text: result.meta
-							? `Page ${result.meta.currentPage} of ${result.meta.totalPages} • ${result.meta.totalCount} total results`
+							? `Page ${currentPage}/${totalPages}`
 							: `${result.issues.length} results`,
 					},
 				};
 
 				const components: APIActionRowComponent<APIButtonComponent>[] = [];
 				if (result.meta && result.meta.totalPages > 1) {
-					const currentPage = result.meta.currentPage;
-					const totalPages = result.meta.totalPages;
 					const query = params.query;
 
 					// Check custom_id length limit (100 chars)
@@ -607,14 +637,14 @@ export class TaskController extends BaseController {
 								{
 									type: ComponentType.Button,
 									custom_id: `task_search_${currentPage - 1}_${query}`,
-									label: "Previous",
+									label: `← Page ${currentPage - 1}`,
 									style: ButtonStyle.Secondary,
 									disabled: currentPage <= 1,
 								},
 								{
 									type: ComponentType.Button,
 									custom_id: `task_search_${currentPage + 1}_${query}`,
-									label: "Next",
+									label: `Page ${currentPage + 1} →`,
 									style: ButtonStyle.Secondary,
 									disabled: currentPage >= totalPages,
 								},
@@ -668,9 +698,17 @@ export class TaskController extends BaseController {
 			return this.createSuccessResponse(msg, ephemeral);
 		}
 
+		const currentPage = result.meta?.currentPage ?? 1;
+		const totalPages = result.meta?.totalPages ?? 1;
+		const totalCount = result.meta?.totalCount ?? result.issues.length;
+		const startItem = ((currentPage - 1) * (result.meta?.pageSize ?? 10)) + 1;
+		const endItem = startItem + result.issues.length - 1;
+
 		const embed: APIEmbed = {
 			title: `🔍 Search Results: "${params.query}"`,
-			description: `Found ${result.issues.length} matching task(s)`,
+			description: result.meta
+				? `Showing ${startItem}-${endItem} of ${totalCount} matching tasks`
+				: `Found ${result.issues.length} matching task(s)`,
 			fields: result.issues.slice(0, 10).map((task) => ({
 				name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
 				value: [
@@ -688,15 +726,13 @@ export class TaskController extends BaseController {
 			color: 0x5865f2,
 			footer: {
 				text: result.meta
-					? `Page ${result.meta.currentPage} of ${result.meta.totalPages} • ${result.meta.totalCount} total results`
+					? `Page ${currentPage}/${totalPages}`
 					: `${result.issues.length} results`,
 			},
 		};
 
 		const components: APIActionRowComponent<APIButtonComponent>[] = [];
 		if (result.meta && result.meta.totalPages > 1) {
-			const currentPage = result.meta.currentPage;
-			const totalPages = result.meta.totalPages;
 			const query = params.query;
 
 			// Check custom_id length limit (100 chars)
@@ -707,14 +743,14 @@ export class TaskController extends BaseController {
 						{
 							type: ComponentType.Button,
 							custom_id: `task_search_${currentPage - 1}_${query}`,
-							label: "Previous",
+							label: `← Page ${currentPage - 1}`,
 							style: ButtonStyle.Secondary,
 							disabled: currentPage <= 1,
 						},
 						{
 							type: ComponentType.Button,
 							custom_id: `task_search_${currentPage + 1}_${query}`,
-							label: "Next",
+							label: `Page ${currentPage + 1} →`,
 							style: ButtonStyle.Secondary,
 							disabled: currentPage >= totalPages,
 						},

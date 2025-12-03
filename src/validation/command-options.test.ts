@@ -68,9 +68,10 @@ describe("Command Option Validators", () => {
 			expect(result).toEqual(["https://github.com/org/repo"]);
 		});
 
-		it("should return undefined for empty values", () => {
-			expect(parseRepositories(undefined)).toBeUndefined();
-			expect(parseRepositories("")).toBeUndefined();
+		it("should throw ValidationError for empty values (required field)", () => {
+			expect(() => parseRepositories(undefined)).toThrow(ValidationError);
+			expect(() => parseRepositories(null)).toThrow(ValidationError);
+			expect(() => parseRepositories("")).toThrow(ValidationError);
 		});
 
 		it("should reject invalid URLs", () => {
@@ -154,19 +155,28 @@ describe("Command Option Validators", () => {
 			expect(params.queueRightAway).toBe(true);
 		});
 
-		it("should handle minimal parameters", () => {
+		it("should handle minimal required parameters", () => {
 			const params = validateCreateTaskParams({
 				prompt: "Fix the bug",
+				repositories: "https://github.com/org/repo",
 			});
 
 			expect(params.prompt).toBe("Fix the bug");
 			expect(params.agent).toBeUndefined();
-			expect(params.repositories).toBeUndefined();
+			expect(params.repositories).toEqual(["https://github.com/org/repo"]);
 			expect(params.branch).toBeUndefined();
 		});
 
 		it("should reject missing prompt", () => {
-			expect(() => validateCreateTaskParams({})).toThrow(ValidationError);
+			expect(() => validateCreateTaskParams({
+				repositories: "https://github.com/org/repo",
+			})).toThrow(ValidationError);
+		});
+
+		it("should reject missing repositories", () => {
+			expect(() => validateCreateTaskParams({
+				prompt: "Fix the bug",
+			})).toThrow(ValidationError);
 		});
 	});
 

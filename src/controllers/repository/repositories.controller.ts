@@ -2,6 +2,7 @@ import type {
 	APIChatInputApplicationCommandInteraction,
 	APIInteractionResponse,
 } from "discord-api-types/v10";
+import { InteractionResponseType } from "discord-api-types/v10";
 import { BaseController } from "../base.controller";
 import { logger } from "../../utils/logger";
 import { ValidationError } from "../../utils/errors";
@@ -59,7 +60,14 @@ export class RepositoriesController extends BaseController {
 				),
 			);
 
-			return this.createDeferredResponse(ephemeral);
+			// Return initial loading response
+			return {
+				type: InteractionResponseType.ChannelMessageWithSource,
+				data: {
+					content: "📦 Loading your repositories...",
+					flags: ephemeral ? 64 : undefined,
+				},
+			};
 		}
 
 		// Fallback to synchronous execution (might timeout)

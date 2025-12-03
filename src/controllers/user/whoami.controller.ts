@@ -2,6 +2,7 @@ import type {
 	APIChatInputApplicationCommandInteraction,
 	APIInteractionResponse,
 } from "discord-api-types/v10";
+import { InteractionResponseType } from "discord-api-types/v10";
 import { BaseController } from "../base.controller";
 import { logger } from "../../utils/logger";
 import type { Env } from "../../types";
@@ -16,7 +17,7 @@ export class WhoamiController extends BaseController {
 		const userId =
 			interaction.member?.user?.id ?? interaction.user?.id ?? "unknown";
 		const startTime = Date.now();
-		const ephemeral = this.getEphemeralFlag(interaction.data.options);
+		const ephemeral = true; // Always ephemeral for privacy
 		const applicationId = env?.DISCORD_APPLICATION_ID;
 		const interactionToken = interaction.token;
 
@@ -32,7 +33,14 @@ export class WhoamiController extends BaseController {
 					interactionToken,
 				),
 			);
-			return this.createDeferredResponse(ephemeral);
+			// Return initial loading response
+			return {
+				type: InteractionResponseType.ChannelMessageWithSource,
+				data: {
+					content: "👤 Loading your account info...",
+					flags: ephemeral ? 64 : undefined,
+				},
+			};
 		}
 
 		const userInfo = await this.temboService.getCurrentUser();

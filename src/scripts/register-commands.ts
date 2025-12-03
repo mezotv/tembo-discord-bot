@@ -24,6 +24,7 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 				name: "create",
 				description: "Create a new Tembo task",
 				options: [
+					// Required options MUST come first
 					{
 						type: ApplicationCommandOptionType.String,
 						name: "prompt",
@@ -34,16 +35,17 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 					},
 					{
 						type: ApplicationCommandOptionType.String,
+						name: "repositories",
+						description: "Repository URL (required - use autocomplete to select)",
+						required: true,
+						autocomplete: true,
+					},
+					// Optional options come after required ones
+					{
+						type: ApplicationCommandOptionType.String,
 						name: "agent",
 						description:
 							"The agent to use for this task (e.g., claudeCode:claude-4-5-sonnet)",
-						required: false,
-						autocomplete: true,
-					},
-					{
-						type: ApplicationCommandOptionType.String,
-						name: "repositories",
-						description: "Comma-separated list of repository URLs",
 						required: false,
 						autocomplete: true,
 					},
@@ -156,7 +158,7 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 	},
 	{
 		name: "whoami",
-		description: "Get your current Tembo user information",
+		description: "Get your current Tembo user information (private)",
 		integration_types: [
 			ApplicationIntegrationType.GuildInstall,
 			ApplicationIntegrationType.UserInstall,
@@ -166,14 +168,7 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 			InteractionContextType.BotDM,
 			InteractionContextType.PrivateChannel,
 		],
-		options: [
-			{
-				type: ApplicationCommandOptionType.Boolean,
-				name: "ephemeral",
-				description: "Whether to send the response as an ephemeral message",
-				required: false,
-			},
-		],
+		// No options - always ephemeral for privacy
 	},
 	{
 		name: "setup",
@@ -221,6 +216,19 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 	{
 		name: "status",
 		description: "Check your Tembo API key registration status",
+		integration_types: [
+			ApplicationIntegrationType.GuildInstall,
+			ApplicationIntegrationType.UserInstall,
+		],
+		contexts: [
+			InteractionContextType.Guild,
+			InteractionContextType.BotDM,
+			InteractionContextType.PrivateChannel,
+		],
+	},
+	{
+		name: "help",
+		description: "Show all available commands and how to use them",
 		integration_types: [
 			ApplicationIntegrationType.GuildInstall,
 			ApplicationIntegrationType.UserInstall,

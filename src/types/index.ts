@@ -76,7 +76,7 @@ export type CommandOptionValue = string | number | boolean;
 export interface CreateTaskParams {
 	prompt: string;
 	agent?: string;
-	repositories?: string[];
+	repositories: string[]; // Required field
 	branch?: string;
 	queueRightAway?: boolean;
 }
