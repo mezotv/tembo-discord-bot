@@ -87,38 +87,59 @@ export class ServiceUnavailableError extends TemboApiError {
 
 export function formatErrorForUser(error: unknown): string {
 	if (error instanceof ValidationError) {
-		return `Validation Error: ${error.message}${error.field ? ` (field: ${error.field})` : ""}`;
+		return `❌ **Validation Error**\n${error.message}${error.field ? `\n\n**Field:** ${error.field}` : ""}`;
 	}
 
 	if (error instanceof AuthenticationError) {
-		return "Authentication failed. Please check your Tembo API key.";
+		return (
+			"❌ **Authentication Failed**\n\n" +
+			"Your API key is invalid or expired.\n\n" +
+			"**How to fix:**\n" +
+			"1. Visit https://app.tembo.io/<your_workspace>/settings/api-keys\n" +
+			"2. Generate a new API key\n" +
+			"3. Run `/setup key:YOUR_NEW_KEY`"
+		);
 	}
 
 	if (error instanceof NotFoundError) {
-		return error.message;
+		return `❌ **Not Found**\n\n${error.message}\n\n**Tip:** Use \`/repositories list\` to see available resources.`;
 	}
 
 	if (error instanceof RateLimitError) {
-		return "Rate limit exceeded. Please try again in a few moments.";
+		return (
+			"⚠️ **Rate Limit Exceeded**\n\n" +
+			"You've made too many requests.\n\n" +
+			"**How to fix:**\n" +
+			"1. Wait 1-2 minutes\n" +
+			"2. Try your command again\n" +
+			"3. Reduce request frequency if this persists"
+		);
 	}
 
 	if (error instanceof ServiceUnavailableError) {
-		return "Tembo service is temporarily unavailable. Please try again later.";
+		return (
+			"⚠️ **Service Temporarily Unavailable**\n\n" +
+			"Tembo's API is experiencing issues.\n\n" +
+			"**How to fix:**\n" +
+			"1. Wait a few minutes\n" +
+			"2. Check https://status.tembo.io for updates\n" +
+			"3. Try your command again"
+		);
 	}
 
 	if (error instanceof TemboApiError) {
-		return `Tembo API Error: ${error.message}`;
+		return `❌ **Tembo API Error**\n\n${error.message}\n\n**Need help?** Check your command parameters and try again.`;
 	}
 
 	if (error instanceof DiscordInteractionError) {
-		return `Discord Error: ${error.message}`;
+		return `❌ **Discord Error**\n\n${error.message}\n\n**Try:** Re-running the command or contact support.`;
 	}
 
 	if (error instanceof Error) {
-		return `Error: ${error.message}`;
+		return `❌ **Error**\n\n${error.message}`;
 	}
 
-	return "An unexpected error occurred. Please try again later.";
+	return "❌ **Unexpected Error**\n\nSomething went wrong. Please try again later.";
 }
 
 export function handleTemboApiError(

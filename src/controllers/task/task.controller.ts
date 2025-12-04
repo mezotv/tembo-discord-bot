@@ -31,7 +31,7 @@ const AGENTS = [
 	{ name: "Claude Code - Fastest", value: "claudeCode:claude-4-5-haiku" },
 	{ name: "Claude Code - Complex Tasks", value: "claudeCode:claude-4.1-opus" },
 	{ name: "Claude Code - Efficient", value: "claudeCode:claude-4-sonnet" },
-	
+
 	{ name: "Codex (Default) - Balanced", value: "codex:gpt-5-medium" },
 	{ name: "Codex - Fastest", value: "codex:gpt-5-minimal" },
 	{ name: "Codex - Quick", value: "codex:gpt-5-low" },
@@ -54,6 +54,30 @@ const AGENTS = [
 	{ name: "Cursor - Composer", value: "cursor:composer-1" },
 	{ name: "Cursor - Grok", value: "cursor:grok" },
 ];
+
+function getStatusEmoji(status: string | undefined): string {
+	if (!status) return "⚪";
+
+	const statusLower = status.toLowerCase();
+
+	if (statusLower.includes("finished") || statusLower.includes("complete") || statusLower.includes("done")) {
+		return "✅";
+	}
+	if (statusLower.includes("failed") || statusLower.includes("error")) {
+		return "❌";
+	}
+	if (statusLower.includes("running") || statusLower.includes("processing") || statusLower.includes("in progress")) {
+		return "🔄";
+	}
+	if (statusLower.includes("pending") || statusLower.includes("queued") || statusLower.includes("waiting")) {
+		return "⏳";
+	}
+	if (statusLower.includes("cancelled") || statusLower.includes("canceled")) {
+		return "⚠️";
+	}
+
+	return "⚪";
+}
 
 export class TaskController extends BaseController {
 	async handle(
@@ -302,14 +326,23 @@ export class TaskController extends BaseController {
 		const duration = Date.now() - startTime;
 		logger.command("task create", userId, true, duration);
 
+		const repoList = params.repositories.length <= 3
+			? params.repositories.map(r => `  • ${r}`).join("\n")
+			: `  • ${params.repositories[0]}\n  • ${params.repositories[1]}\n  • ${params.repositories[2]}\n  • ...and ${params.repositories.length - 3} more`;
+
 		return this.createSuccessResponse(
-			`✅ Task submitted successfully!\n\n` +
-				`**Task:** ${params.prompt.substring(0, 150)}${params.prompt.length > 150 ? "..." : ""}\n` +
-				`${params.agent ? `**Agent:** ${params.agent}\n` : ""}` +
-				`**Repositories:** ${params.repositories.length}\n` +
-				`${params.branch ? `**Branch:** ${params.branch}\n` : ""}\n` +
-				`⏳ The task is being created and will be processed by Tembo shortly.\n` +
-				`Use \`/task list\` to see your tasks.`,
+			`✅ **Task Submitted Successfully!**\n\n` +
+				`**📋 Task Details**\n` +
+				`${params.prompt.substring(0, 200)}${params.prompt.length > 200 ? "..." : ""}\n\n` +
+				`**⚙️ Configuration**\n` +
+				`• **Agent:** ${params.agent || "Default (Claude Code)"}\n` +
+				`• **Repositories:** ${params.repositories.length}\n${repoList}\n` +
+				`${params.branch ? `• **Branch:** ${params.branch}\n` : ""}` +
+				`${params.queueRightAway !== undefined ? `• **Queue Immediately:** ${params.queueRightAway ? "Yes" : "No"}\n` : ""}` +
+				`\n**⏳ Next Steps**\n` +
+				`1. Your task is being processed by Tembo\n` +
+				`2. Use \`/task list\` to monitor progress\n` +
+				`3. Check task status for completion`,
 			ephemeral,
 		);
 	}
@@ -367,7 +400,15 @@ export class TaskController extends BaseController {
 			let body;
 			if (!result.issues || result.issues.length === 0) {
 				body = {
-					content: "📝 No tasks found.\n\nCreate a new task with `/task create`.",
+					content:
+						"📝 **No Tasks Found**\n\n" +
+						"You don't have any tasks yet. Ready to get started?\n\n" +
+						"**Getting Started:**\n" +
+						"1. Use `/task create` to create your first task\n" +
+						"2. Connect repositories with `/repositories list`\n" +
+						"3. Need help? Try `/help`\n\n" +
+						"**Example:**\n" +
+						"`/task create prompt:\"Fix the login bug\" repositories:my-repo`",
 					flags: ephemeral ? 64 : undefined,
 				};
 			} else {
@@ -382,20 +423,30 @@ export class TaskController extends BaseController {
 					description: result.meta
 						? `Showing ${startItem}-${endItem} of ${totalCount} total tasks`
 						: `Showing ${result.issues.length} task(s)`,
-					fields: result.issues.slice(0, 10).map((task) => ({
-						name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
-						value: [
-							`**ID:** \`${task.id}\``,
-							task.status ? `**Status:** ${task.status}` : "",
-							task.agent ? `**Agent:** ${task.agent}` : "",
-							task.createdAt
-								? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
-								: "",
-						]
-							.filter(Boolean)
-							.join("\n"),
-						inline: false,
-					})),
+					fields: result.issues.slice(0, 10).map((task) => {
+						const repositories = (task.metadata?.repositories as string[]) ?? (task.data?.repositories as string[]);
+						const repoInfo = repositories && Array.isArray(repositories)
+							? repositories.length === 1
+								? `**Repository:** ${repositories[0]}`
+								: `**Repositories:** ${repositories.length} (${repositories.slice(0, 2).join(", ")}${repositories.length > 2 ? "..." : ""})`
+							: null;
+
+						return {
+							name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
+							value: [
+								`**ID:** \`${task.id}\``,
+								task.status ? `**Status:** ${getStatusEmoji(task.status)} ${task.status}` : "",
+								repoInfo,
+								task.agent ? `**Agent:** ${task.agent}` : "",
+								task.createdAt
+									? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
+									: "",
+							]
+								.filter(Boolean)
+								.join("\n"),
+							inline: false,
+						};
+					}),
 					color: 0x5865f2,
 					footer: {
 						text: result.meta
@@ -465,7 +516,15 @@ export class TaskController extends BaseController {
 		logger.command("task list", userId, true, duration);
 
 		if (!result.issues || result.issues.length === 0) {
-			const msg = "📝 No tasks found.\n\nCreate a new task with `/task create`.";
+			const msg =
+				"📝 **No Tasks Found**\n\n" +
+				"You don't have any tasks yet. Ready to get started?\n\n" +
+				"**Getting Started:**\n" +
+				"1. Use `/task create` to create your first task\n" +
+				"2. Connect repositories with `/repositories list`\n" +
+				"3. Need help? Try `/help`\n\n" +
+				"**Example:**\n" +
+				"`/task create prompt:\"Fix the login bug\" repositories:my-repo`";
 			if (isUpdate) {
 				return this.createUpdateMessageResponse([], []);
 			}
@@ -483,20 +542,30 @@ export class TaskController extends BaseController {
 			description: result.meta
 				? `Showing ${startItem}-${endItem} of ${totalCount} total tasks`
 				: `Showing ${result.issues.length} task(s)`,
-			fields: result.issues.slice(0, 10).map((task) => ({
-				name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
-				value: [
-					`**ID:** \`${task.id}\``,
-					task.status ? `**Status:** ${task.status}` : "",
-					task.agent ? `**Agent:** ${task.agent}` : "",
-					task.createdAt
-						? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
-						: "",
-				]
-					.filter(Boolean)
-					.join("\n"),
-				inline: false,
-			})),
+			fields: result.issues.slice(0, 10).map((task) => {
+				const repositories = (task.metadata?.repositories as string[]) ?? (task.data?.repositories as string[]);
+				const repoInfo = repositories && Array.isArray(repositories)
+					? repositories.length === 1
+						? `**Repository:** ${repositories[0]}`
+						: `**Repositories:** ${repositories.length} (${repositories.slice(0, 2).join(", ")}${repositories.length > 2 ? "..." : ""})`
+					: null;
+
+				return {
+					name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
+					value: [
+						`**ID:** \`${task.id}\``,
+						task.status ? `**Status:** ${getStatusEmoji(task.status)} ${task.status}` : "",
+						repoInfo,
+						task.agent ? `**Agent:** ${task.agent}` : "",
+						task.createdAt
+							? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
+							: "",
+					]
+						.filter(Boolean)
+						.join("\n"),
+					inline: false,
+				};
+			}),
 			color: 0x5865f2,
 			footer: {
 				text: result.meta
@@ -588,7 +657,15 @@ export class TaskController extends BaseController {
 			let body;
 			if (!result.issues || result.issues.length === 0) {
 				body = {
-					content: `🔍 No tasks found matching "${params.query}".\n\nTry a different search query or create a new task with \`/task create\`.`,
+					content:
+						`🔍 **No Results Found**\n\n` +
+						`No tasks match your search: "${params.query}"\n\n` +
+						`**Search Tips:**\n` +
+						`• Try different keywords\n` +
+						`• Use partial words (e.g., "bug" instead of "bugfix")\n` +
+						`• Check task IDs with \`/task list\`\n\n` +
+						`**Or create a new task:**\n` +
+						`\`/task create prompt:"${params.query}"\``,
 					flags: ephemeral ? 64 : undefined,
 				};
 			} else {
@@ -603,20 +680,30 @@ export class TaskController extends BaseController {
 					description: result.meta
 						? `Showing ${startItem}-${endItem} of ${totalCount} matching tasks`
 						: `Found ${result.issues.length} matching task(s)`,
-					fields: result.issues.slice(0, 10).map((task) => ({
-						name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
-						value: [
-							`**ID:** \`${task.id}\``,
-							task.status ? `**Status:** ${task.status}` : "",
-							task.agent ? `**Agent:** ${task.agent}` : "",
-							task.createdAt
-								? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
-								: "",
-						]
-							.filter(Boolean)
-							.join("\n"),
-						inline: false,
-					})),
+					fields: result.issues.slice(0, 10).map((task) => {
+						const repositories = (task.metadata?.repositories as string[]) ?? (task.data?.repositories as string[]);
+						const repoInfo = repositories && Array.isArray(repositories)
+							? repositories.length === 1
+								? `**Repository:** ${repositories[0]}`
+								: `**Repositories:** ${repositories.length} (${repositories.slice(0, 2).join(", ")}${repositories.length > 2 ? "..." : ""})`
+							: null;
+
+						return {
+							name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
+							value: [
+								`**ID:** \`${task.id}\``,
+								task.status ? `**Status:** ${getStatusEmoji(task.status)} ${task.status}` : "",
+								repoInfo,
+								task.agent ? `**Agent:** ${task.agent}` : "",
+								task.createdAt
+									? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
+									: "",
+							]
+								.filter(Boolean)
+								.join("\n"),
+							inline: false,
+						};
+					}),
 					color: 0x5865f2,
 					footer: {
 						text: result.meta
@@ -691,7 +778,15 @@ export class TaskController extends BaseController {
 		logger.command("task search", userId, true, duration);
 
 		if (!result.issues || result.issues.length === 0) {
-			const msg = `🔍 No tasks found matching "${params.query}".\n\nTry a different search query or create a new task with \`/task create\`.`;
+			const msg =
+				`🔍 **No Results Found**\n\n` +
+				`No tasks match your search: "${params.query}"\n\n` +
+				`**Search Tips:**\n` +
+				`• Try different keywords\n` +
+				`• Use partial words (e.g., "bug" instead of "bugfix")\n` +
+				`• Check task IDs with \`/task list\`\n\n` +
+				`**Or create a new task:**\n` +
+				`\`/task create prompt:"${params.query}"\``;
 			if (isUpdate) {
 				return this.createUpdateMessageResponse([], []);
 			}
@@ -709,20 +804,30 @@ export class TaskController extends BaseController {
 			description: result.meta
 				? `Showing ${startItem}-${endItem} of ${totalCount} matching tasks`
 				: `Found ${result.issues.length} matching task(s)`,
-			fields: result.issues.slice(0, 10).map((task) => ({
-				name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
-				value: [
-					`**ID:** \`${task.id}\``,
-					task.status ? `**Status:** ${task.status}` : "",
-					task.agent ? `**Agent:** ${task.agent}` : "",
-					task.createdAt
-						? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
-						: "",
-				]
-					.filter(Boolean)
-					.join("\n"),
-				inline: false,
-			})),
+			fields: result.issues.slice(0, 10).map((task) => {
+				const repositories = (task.metadata?.repositories as string[]) ?? (task.data?.repositories as string[]);
+				const repoInfo = repositories && Array.isArray(repositories)
+					? repositories.length === 1
+						? `**Repository:** ${repositories[0]}`
+						: `**Repositories:** ${repositories.length} (${repositories.slice(0, 2).join(", ")}${repositories.length > 2 ? "..." : ""})`
+					: null;
+
+				return {
+					name: task.title || task.prompt?.substring(0, 100) || "Untitled Task",
+					value: [
+						`**ID:** \`${task.id}\``,
+						task.status ? `**Status:** ${getStatusEmoji(task.status)} ${task.status}` : "",
+						repoInfo,
+						task.agent ? `**Agent:** ${task.agent}` : "",
+						task.createdAt
+							? `**Created:** <t:${Math.floor(new Date(task.createdAt).getTime() / 1000)}:R>`
+							: "",
+					]
+						.filter(Boolean)
+						.join("\n"),
+					inline: false,
+				};
+			}),
 			color: 0x5865f2,
 			footer: {
 				text: result.meta

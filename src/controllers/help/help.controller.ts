@@ -85,7 +85,7 @@ export class HelpController extends BaseController {
 				{
 					name: "🔗 Links",
 					value:
-						"[Tembo Dashboard](https://tembo.io) • [Get API Key](https://tembo.io/settings/api-keys) • [Documentation](https://test-8862363a.mintlify.app)",
+						"[Tembo Dashboard](https://app.tembo.io) • [Get API Key](https://app.tembo.io/<your_workspace>/settings/api-keys) • [Documentation](https://docs.tembo.io)",
 					inline: false,
 				},
 			],

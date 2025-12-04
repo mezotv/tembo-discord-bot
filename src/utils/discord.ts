@@ -130,10 +130,11 @@ export async function triggerOnboarding(
 			{
 				name: "📝 How to get your API key",
 				value:
-					"1. Visit [Tembo Dashboard](https://tembo.ai/dashboard)\n" +
+					"1. Visit [Tembo Dashboard](https://app.tembo.io)\n" +
 					"2. Navigate to **Settings** → **API Keys**\n" +
 					"3. Generate a new API key (or copy an existing one)\n" +
-					"4. Copy the entire key",
+					"4. Copy the entire key\n" +
+					"_Direct link: https://app.tembo.io/<your_workspace>/settings/api-keys_",
 				inline: false,
 			},
 			{
@@ -182,6 +183,7 @@ export async function triggerOnboarding(
 		logger.info("Onboarding DM sent successfully", { userId });
 	}
 }
+
 
 
 
