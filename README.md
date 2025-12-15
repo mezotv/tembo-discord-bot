@@ -4,6 +4,8 @@ A production-ready Discord bot built on Cloudflare Workers that integrates with 
 
 **Made by** [Anurag Dhungana](anuragd.me) and [Dominik Koch](https://dominikkoch.dev/)
 
+Link to add the bot: [Install](https://discord.com/oauth2/authorize?client_id=1438564757358645298)
+
 ---
 
 ## Table of Contents
