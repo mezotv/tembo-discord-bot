@@ -1,6 +1,6 @@
 // Tests for TemboService
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { TemboService, createTemboService } from "./tembo.service";
 import { TemboApiError, AuthenticationError } from "../utils/errors";
 import type {
@@ -71,6 +71,7 @@ describe("TemboService", () => {
 			const params = {
 				prompt: "Create a test",
 				agent: "claudeCode:claude-4-5-sonnet",
+			repositories: ["https://github.com/org/repo"],
 			};
 
 			const result = await service.createTask(params);
@@ -121,7 +122,7 @@ describe("TemboService", () => {
 				new Error("401 Unauthorized"),
 			);
 
-			const params = { prompt: "Test" };
+			const params = { prompt: "Test", repositories: ["https://github.com/org/repo"] };
 
 			await expect(service.createTask(params)).rejects.toThrow();
 		});
@@ -158,7 +159,7 @@ describe("TemboService", () => {
 
 			mockClient.task.create.mockResolvedValue(mockApiResponse);
 
-			const result = await service.createTask({ prompt: "Test" });
+			const result = await service.createTask({ prompt: "Test", repositories: ["https://github.com/org/repo"] });
 
 			expect(result.id).toBe("task-789");
 			expect(result.title).toBe("Mapped Task");
@@ -398,7 +399,7 @@ describe("TemboService", () => {
 			const result = await service.listRepositories();
 
 			expect(result.codeRepositories).toHaveLength(2);
-			expect(result.codeRepositories[0].id).toBe("repo-1");
+			expect(result.codeRepositories[0]!.id).toBe("repo-1");
 		});
 
 		it("should handle repositories field (fallback)", async () => {

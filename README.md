@@ -10,41 +10,41 @@ Link to add the bot: [Install](https://discord.com/oauth2/authorize?client_id=14
 
 ## Table of Contents
 
-- [Features](#-features)
-- [Commands](#-commands)
-- [Quick Start](#-quick-start)
-- [Installation & Setup](#-installation--setup)
-- [Inviting the Bot](#-inviting-the-bot)
-- [Multi-User Authentication](#-multi-user-authentication)
-- [Architecture](#️-architecture)
-- [Development](#-development)
-- [Testing](#-testing)
-- [Monitoring & Logging](#-monitoring--logging)
-- [Troubleshooting](#-troubleshooting)
-- [Security](#-security)
-- [Tech Stack](#-tech-stack)
-- [Tembo SDK Feedback](#-tembo-sdk-feedback)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Additional Resources](#-additional-resources)
+- [Features](#features)
+- [Commands](#commands)
+- [Quick Start](#quick-start)
+- [Installation & Setup](#installation--setup)
+- [Inviting the Bot](#inviting-the-bot)
+- [Multi-User Authentication](#multi-user-authentication)
+- [Architecture](#architecture)
+- [Development](#development)
+- [Testing](#testing)
+- [Monitoring & Logging](#monitoring--logging)
+- [Troubleshooting](#troubleshooting)
+- [Security](#security)
+- [Tech Stack](#tech-stack)
+- [Tembo SDK Feedback](#tembo-sdk-feedback)
+- [Contributing](#contributing)
+- [License](#license)
+- [Additional Resources](#additional-resources)
 
 ---
 
-## ✨ Features
+## Features
 
-- ✅ **Per-User API Keys**: Each Discord user can register their own Tembo API key
-- ✅ **AES-256-GCM Encryption**: API keys are encrypted before storage
-- ✅ **Cloudflare D1 Database**: Secure, serverless database for user data
-- ✅ **Automatic Onboarding**: New users receive DM instructions when they try to use commands
-- ✅ **Slash Commands**: Full Discord slash command support with autocomplete
-- ✅ **Interactive Components**: Pagination buttons for task lists and search results
-- ✅ **User & Server Installs**: Works in DMs and servers
-- ✅ **Deferred Responses**: Handles long-running operations without timeouts
-- ✅ **Structured Logging**: JSON logs for production observability
+- **Per-User API Keys**: Each Discord user can register their own Tembo API key
+- **AES-256-GCM Encryption**: API keys are encrypted before storage
+- **Cloudflare D1 Database**: Secure, serverless database for user data
+- **Automatic Onboarding**: New users receive DM instructions when they try to use commands
+- **Slash Commands**: Full Discord slash command support with autocomplete
+- **Interactive Components**: Pagination buttons for task lists and search results
+- **User & Server Installs**: Works in DMs and servers
+- **Deferred Responses**: Handles long-running operations without timeouts
+- **Structured Logging**: JSON logs for production observability
 
 ---
 
-## 📚 Commands
+## Commands
 
 The bot uses Discord's subcommand structure for better organization:
 
@@ -98,7 +98,7 @@ The bot uses Discord's subcommand structure for better organization:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Clone the repository**
    ```bash
@@ -128,11 +128,11 @@ The bot uses Discord's subcommand structure for better organization:
 
 ---
 
-## 📦 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) installed
+- [Bun](https://bun.sh) v1.2.18 or later installed (for `bun pm version` support)
 - A [Discord Application](https://discord.com/developers/applications) with bot created
 - A [Tembo](https://tembo.io) account with API key
 - [Cloudflare Workers](https://workers.cloudflare.com) account
@@ -165,7 +165,7 @@ wrangler d1 create tembo-bot-db
 **Output will look like:**
 
 ```
-✅ Successfully created DB 'tembo-bot-db' in region WEUR
+Successfully created DB 'tembo-bot-db' in region WEUR
 Created your database using D1's new storage backend.
 
 [[d1_databases]]
@@ -227,7 +227,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 xK2jN8pL4mQ6rS9tV1wX3yZ5aC7dE0fG1hI2jK3lM4n=
 ```
 
-**⚠️ IMPORTANT: Save this key securely! You'll need it for both local and production.**
+**IMPORTANT: Save this key securely! You'll need it for both local and production.**
 
 ### Step 7: Configure Environment Variables
 
@@ -287,7 +287,7 @@ bun run register-commands
 **Expected output:**
 
 ```
-✅ Successfully registered 7 slash command(s)!
+Successfully registered 7 slash command(s)!
 Commands:
   - /task: Manage Tembo tasks
   - /repositories: Manage Tembo repositories
@@ -332,7 +332,7 @@ Deployed tembo-discord-bot triggers (x.xx sec)
 
 ---
 
-## 🤖 Inviting the Bot
+## Inviting the Bot
 
 ### Method 1: Server Installation (Guild Install)
 
@@ -357,14 +357,14 @@ https://discord.com/api/oauth2/authorize?client_id=YOUR_APPLICATION_ID&permissio
 2. Select your application (Tembo Bot)
 3. Navigate to **"OAuth2"** → **"URL Generator"**
 4. Select scopes:
-   - ✅ `bot` - Required for bot functionality
-   - ✅ `applications.commands` - Required for slash commands
+   - `bot` - Required for bot functionality
+   - `applications.commands` - Required for slash commands
 5. Select bot permissions:
-   - ✅ `Send Messages` - Bot needs to send responses
-   - ✅ `Use Slash Commands` - Required for slash commands
-   - ✅ `Read Message History` - Optional, for context if needed
-   - ✅ `Send Messages in Threads` - Optional, for thread support
-   - ✅ `Embed Links` - Recommended, for rich embeds
+   - `Send Messages` - Bot needs to send responses
+   - `Use Slash Commands` - Required for slash commands
+   - `Read Message History` - Optional, for context if needed
+   - `Send Messages in Threads` - Optional, for thread support
+   - `Embed Links` - Recommended, for rich embeds
 6. Copy the generated URL and open it in your browser
 7. Select your server and authorize
 8. Complete any CAPTCHA if prompted
@@ -379,17 +379,17 @@ This allows users to install the bot for personal use in DMs and servers they're
 2. Select your application
 3. Navigate to **"OAuth2"** → **"URL Generator"**
 4. Select scopes:
-   - ✅ `applications.commands` (for user installs, you don't need `bot` scope)
+   - `applications.commands` (for user installs, you don't need `bot` scope)
 5. Copy the generated URL
 6. Share this URL with users or open it yourself
 7. Users can install it to their account
 
 #### Benefits of User Install
 
-- ✅ Works in DMs (no server needed)
-- ✅ Works in any server the user has access to
-- ✅ No server admin permissions required
-- ✅ Personal API keys (each user has their own)
+- Works in DMs (no server needed)
+- Works in any server the user has access to
+- No server admin permissions required
+- Personal API keys (each user has their own)
 
 ### Verification Checklist
 
@@ -402,7 +402,7 @@ After inviting the bot:
 
 ---
 
-## 🔐 Multi-User Authentication
+## Multi-User Authentication
 
 The bot supports per-user API keys with secure encryption and storage.
 
@@ -446,19 +446,19 @@ wrangler d1 execute tembo-bot-db --remote --command="SELECT * FROM auth_events O
 
 ### Security Features
 
-🔒 **Encryption Master Key**
+**Encryption Master Key**
 
 - Store securely (password manager, Cloudflare secrets)
 - If lost, all existing encrypted keys become unrecoverable
 - Users would need to re-register
 
-🔒 **API Key Storage**
+**API Key Storage**
 
 - Keys encrypted with AES-256-GCM
 - Unique IV and salt per encryption
 - Additional authenticated data (Discord user ID) prevents tampering
 
-🔒 **User Isolation**
+**User Isolation**
 
 - Each Discord user has their own Tembo API key
 - No cross-user data access
@@ -466,7 +466,7 @@ wrangler d1 execute tembo-bot-db --remote --command="SELECT * FROM auth_events O
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 The bot uses a clean, layered architecture for maintainability and testability:
 
@@ -531,7 +531,7 @@ src/
 
 ---
 
-## 🚀 Development
+## Development
 
 ### Local Development
 
@@ -560,15 +560,54 @@ bun dev
 
 ### Deployment Workflow
 
+#### Development & Testing
 1. Make changes to code
 2. Run `bun test` to ensure tests pass
 3. Run `bun type-check` to verify types
-4. Run `bun run deploy` to deploy to Cloudflare
-5. If commands changed, run `bun run register-commands`
+
+#### Release Workflow (Recommended)
+
+**For new features or updates:**
+
+```bash
+# 1. Commit your feature changes
+git add .
+git commit -m "Add feature X or Fix bug Y"
+
+# 2. Bump version and deploy (one command!)
+bun run release
+
+# 3. Push to GitHub
+git push && git push --tags
+```
+
+**Available version commands:**
+- `bun run version:patch` - Bug fixes (1.0.0 → 1.0.1)
+- `bun run version:minor` - New features (1.0.0 → 1.1.0)
+- `bun run version:major` - Breaking changes (1.0.0 → 2.0.0)
+- `bun run release` - Bump minor version + deploy
+
+**What `bun run release` does:**
+1. Bumps version in `package.json`
+2. Creates git commit with version number (e.g., "1.1.0")
+3. Creates git tag (e.g., "v1.1.0")
+4. Deploys to Cloudflare Workers
+
+**Note:** Version commands require a clean git working directory. Commit your changes first!
+
+#### Manual Deployment (without version bump)
+```bash
+bun run deploy
+```
+
+#### Register Commands (if commands changed)
+```bash
+bun run register-commands
+```
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Run Tests
 
@@ -615,7 +654,7 @@ describe('validatePrompt', () => {
 
 ---
 
-## 📊 Monitoring & Logging
+## Monitoring & Logging
 
 ### View Logs
 
@@ -654,7 +693,7 @@ View metrics in the Cloudflare Workers dashboard:
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Application did not respond"
 
@@ -736,13 +775,13 @@ View metrics in the Cloudflare Workers dashboard:
 ### Bot not receiving interactions
 
 **Checklist**:
-- ✅ Bot is deployed: `bun run deploy`
-- ✅ Secrets are set: `wrangler secret list`
-- ✅ Interactions endpoint is configured in Discord
-- ✅ Bot is in your server with proper permissions
-- ✅ Commands are registered: `bun run register-commands`
-- ✅ Database is created and migrations applied
-- ✅ Encryption key is set
+- Bot is deployed: `bun run deploy`
+- Secrets are set: `wrangler secret list`
+- Interactions endpoint is configured in Discord
+- Bot is in your server with proper permissions
+- Commands are registered: `bun run register-commands`
+- Database is created and migrations applied
+- Encryption key is set
 
 ### TypeScript Errors
 
@@ -754,19 +793,19 @@ View metrics in the Cloudflare Workers dashboard:
 
 ---
 
-## 🔒 Security
+## Security
 
 ### Security Features
 
-- ✅ **Discord Request Verification**: All requests verified using Discord's public key signature
-- ✅ **Encrypted Storage**: API keys encrypted with AES-256-GCM before storage
-- ✅ **Secure Secrets**: All sensitive data stored as Cloudflare secrets (never in code)
-- ✅ **Input Validation**: All user inputs validated before processing
-- ✅ **No Sensitive Data in Errors**: Error messages don't expose sensitive information
-- ✅ **Type Safety**: Strict TypeScript for compile-time safety
-- ✅ **User Isolation**: Each user's API key is isolated - no cross-user access
-- ✅ **Ephemeral Messages**: Most responses are ephemeral (only visible to the user)
-- ✅ **Minimal Permissions**: Bot only requests necessary Discord permissions
+- **Discord Request Verification**: All requests verified using Discord's public key signature
+- **Encrypted Storage**: API keys encrypted with AES-256-GCM before storage
+- **Secure Secrets**: All sensitive data stored as Cloudflare secrets (never in code)
+- **Input Validation**: All user inputs validated before processing
+- **No Sensitive Data in Errors**: Error messages don't expose sensitive information
+- **Type Safety**: Strict TypeScript for compile-time safety
+- **User Isolation**: Each user's API key is isolated - no cross-user access
+- **Ephemeral Messages**: Most responses are ephemeral (only visible to the user)
+- **Minimal Permissions**: Bot only requests necessary Discord permissions
 
 ### Security Best Practices
 
@@ -778,7 +817,7 @@ View metrics in the Cloudflare Workers dashboard:
 
 ---
 
-## 📦 Tech Stack
+## Tech Stack
 
 - **Runtime**: [Cloudflare Workers](https://workers.cloudflare.com/) - Serverless edge platform
 - **Framework**: [Hono](https://hono.dev/) - Lightweight web framework
@@ -792,7 +831,7 @@ View metrics in the Cloudflare Workers dashboard:
 
 ---
 
-## 📝 Tembo SDK Feedback
+## Tembo SDK Feedback
 
 ### Issues We Encountered
 
@@ -895,7 +934,7 @@ client.task.onStatusChange(task.id, (updatedTask) => {
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please:
 
@@ -908,13 +947,13 @@ Contributions are welcome! Please:
 
 ---
 
-## 📄 License
+## License
 
 MIT
 
 ---
 
-## 🔗 Additional Resources
+## Additional Resources
 
 - [Discord Developer Portal](https://discord.com/developers/docs)
 - [Tembo Documentation](https://docs.tembo.io/)
@@ -923,7 +962,7 @@ MIT
 
 ---
 
-## 💡 Tips
+## Tips
 
 - **Fast feedback**: Use `bun test:watch` during development
 - **Debug logs**: Use `wrangler tail --format pretty` to see formatted logs

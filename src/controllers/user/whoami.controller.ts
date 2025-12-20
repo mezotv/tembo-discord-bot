@@ -43,7 +43,7 @@ export class WhoamiController extends BaseController {
 			};
 		}
 
-		const userInfo = await this.temboService.getCurrentUser();
+		const userInfo = await this.getTemboService().getCurrentUser();
 
 		const duration = Date.now() - startTime;
 		logger.command("whoami", userId, true, duration);
@@ -85,7 +85,7 @@ export class WhoamiController extends BaseController {
 		interactionToken: string,
 	): Promise<void> {
 		try {
-			const userInfo = await this.temboService.getCurrentUser();
+			const userInfo = await this.getTemboService().getCurrentUser();
 
 			const duration = Date.now() - startTime;
 			logger.command("whoami", userId, true, duration);

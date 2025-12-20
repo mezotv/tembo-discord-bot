@@ -224,7 +224,7 @@ export class TaskController extends BaseController {
 		currentValue: string,
 	): Promise<APIInteractionResponse> {
 		try {
-			const result = await this.temboService.listRepositories();
+			const result = await this.getTemboService().listRepositories();
 			const repos = result.codeRepositories;
 
 			const filtered = repos
@@ -311,7 +311,7 @@ export class TaskController extends BaseController {
 		});
 
 		if (ctx) {
-			const taskPromise = this.temboService
+			const taskPromise = this.getTemboService()
 				.createTask(params)
 				.catch((error) => {
 					logger.error("Background task creation failed", error, {
@@ -393,7 +393,7 @@ export class TaskController extends BaseController {
 		interactionToken: string,
 	): Promise<void> {
 		try {
-			const result = await this.temboService.listTasks(params);
+			const result = await this.getTemboService().listTasks(params);
 			const duration = Date.now() - startTime;
 			logger.command("task list", userId, true, duration);
 
@@ -510,7 +510,7 @@ export class TaskController extends BaseController {
 			isUpdate,
 		});
 
-		const result = await this.temboService.listTasks(params);
+		const result = await this.getTemboService().listTasks(params);
 
 		const duration = Date.now() - startTime;
 		logger.command("task list", userId, true, duration);
@@ -649,8 +649,28 @@ export class TaskController extends BaseController {
 		applicationId: string,
 		interactionToken: string,
 	): Promise<void> {
+		logger.info("DEBUG: Starting task search processing", {
+			query: params.query,
+			page: params.page,
+			limit: params.limit,
+			userId,
+			ephemeral,
+		});
+
 		try {
-			const result = await this.temboService.searchTasks(params);
+			logger.info("DEBUG: About to call searchTasks from controller", {
+				query: params.query,
+				page: params.page,
+				limit: params.limit,
+			});
+
+			const result = await this.getTemboService().searchTasks(params);
+
+			logger.info("DEBUG: searchTasks returned successfully to controller", {
+				issuesCount: result.issues?.length ?? 0,
+				hasMetahas: !!result.meta,
+				query: result.query,
+			});
 			const duration = Date.now() - startTime;
 			logger.command("task search", userId, true, duration);
 
@@ -749,6 +769,15 @@ export class TaskController extends BaseController {
 
 			await updateInteractionResponse(applicationId, interactionToken, body);
 		} catch (error) {
+			logger.error("DEBUG: Task search failed in controller", {
+				errorType: error instanceof Error ? error.constructor.name : typeof error,
+				errorMessage: error instanceof Error ? error.message : String(error),
+				errorStack: error instanceof Error ? error.stack : undefined,
+				query: params.query,
+				page: params.page,
+				limit: params.limit,
+				userId,
+			});
 			logger.error("Failed to process task search in background", error);
 			await updateInteractionResponse(applicationId, interactionToken, {
 				content: "❌ Failed to search tasks.",
@@ -773,7 +802,7 @@ export class TaskController extends BaseController {
 			isUpdate,
 		});
 
-		const result = await this.temboService.searchTasks(params);
+		const result = await this.getTemboService().searchTasks(params);
 		const duration = Date.now() - startTime;
 		logger.command("task search", userId, true, duration);
 

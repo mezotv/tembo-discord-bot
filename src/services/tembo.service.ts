@@ -4,6 +4,7 @@ import type {
 	TemboTaskList,
 	TemboTaskSearchResult,
 	TemboRepositoryList,
+	TemboRepository,
 	TemboUserInfo,
 	CreateTaskParams,
 	ListTasksParams,
@@ -11,6 +12,53 @@ import type {
 } from "../types";
 import { handleTemboApiError, TemboApiError } from "../utils/errors";
 import { logger } from "../utils/logger";
+
+/**
+ * Tembo API response types (based on actual API behavior)
+ * Note: These may differ from SDK types due to API inconsistencies
+ */
+interface TemboApiRepositoryListResponse {
+	codeRepositories?: unknown[];
+	repositories?: unknown[];
+}
+
+interface TemboApiUserInfoResponse {
+	userId?: string;
+	orgId?: string;
+	organizationId?: string;
+	email?: string;
+}
+
+interface TemboApiTaskResponse {
+	id?: string;
+	title?: string;
+	description?: string;
+	prompt?: string;
+	status?: string;
+	agent?: string;
+	organizationId?: string;
+	repositories?: string[];
+	createdAt?: string;
+	updatedAt?: string;
+	hash?: string;
+	metadata?: Record<string, unknown>;
+	kind?: string;
+	data?: Record<string, unknown>;
+	targetBranch?: string | null;
+	sourceBranch?: string | null;
+	issueSourceId?: string;
+	level?: number;
+	levelReasoning?: string | null;
+	lastSeenAt?: string;
+	lastQueuedAt?: string | null;
+	lastQueuedBy?: string | null;
+	createdBy?: string;
+	sandboxType?: string | null;
+	mcpServers?: unknown[];
+	solutionType?: string | null;
+	workflowId?: string | null;
+	[key: string]: unknown; // Allow additional undocumented fields
+}
 
 export class TemboService {
 	constructor(private readonly client: Tembo) {
@@ -41,7 +89,7 @@ export class TemboService {
 			const duration = Date.now() - startTime;
 			logger.apiCall(endpoint, "POST", 200, duration);
 
-			const task = this.mapToTemboTask(result);
+			const task = this.mapToTemboTask(result as unknown as TemboApiTaskResponse);
 
 			logger.info("Task created successfully", {
 				taskId: task.id,
@@ -80,7 +128,7 @@ export class TemboService {
 
 			const taskList: TemboTaskList = {
 				issues: Array.isArray(result.issues)
-					? result.issues.map((t) => this.mapToTemboTask(t))
+					? result.issues.map((t) => this.mapToTemboTask(t as unknown as TemboApiTaskResponse))
 					: [],
 				meta: result.meta,
 			};
@@ -112,10 +160,25 @@ export class TemboService {
 				limit: params.limit ?? 10,
 			});
 
+			logger.info("DEBUG: About to call SDK search method", {
+				q: params.query,
+				page: params.page,
+				limit: params.limit,
+			});
+
 			const result = await this.client.task.search({
 				q: params.query,
 				page: params.page,
 				limit: params.limit,
+			});
+
+			logger.info("DEBUG: SDK search response received", {
+				hasIssues: !!result.issues,
+				issuesCount: Array.isArray(result.issues) ? result.issues.length : 0,
+				hasMeta: !!result.meta,
+				hasQuery: !!result.query,
+				metaKeys: result.meta ? Object.keys(result.meta) : [],
+				rawResultPreview: JSON.stringify(result).substring(0, 500),
 			});
 
 			const duration = Date.now() - startTime;
@@ -123,7 +186,7 @@ export class TemboService {
 
 			const searchResult: TemboTaskSearchResult = {
 				issues: Array.isArray(result.issues)
-					? result.issues.map((t) => this.mapToTemboTask(t))
+					? result.issues.map((t) => this.mapToTemboTask(t as unknown as TemboApiTaskResponse))
 					: [],
 				meta: result.meta,
 				query: params.query,
@@ -138,6 +201,20 @@ export class TemboService {
 			return searchResult;
 		} catch (error) {
 			const duration = Date.now() - startTime;
+
+			// Enhanced error logging for debugging
+			logger.error("DEBUG: Search failed with detailed error", {
+				errorType: error instanceof Error ? error.constructor.name : typeof error,
+				errorMessage: error instanceof Error ? error.message : String(error),
+				errorStack: error instanceof Error ? error.stack : undefined,
+				errorObject: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+				endpoint,
+				duration,
+				query: params.query,
+				page: params.page,
+				limit: params.limit,
+			});
+
 			logger.error("Failed to search tasks", error, {
 				endpoint,
 				duration,
@@ -154,15 +231,14 @@ export class TemboService {
 		try {
 			logger.info("Listing repositories");
 
-			const result = await this.client.repository.list();
+			const result = (await this.client.repository.list()) as TemboApiRepositoryListResponse;
 
 			const duration = Date.now() - startTime;
 			logger.apiCall(endpoint, "GET", 200, duration);
 
-			const repos =
-				(result as any).codeRepositories ?? (result as any).repositories ?? [];
+			const repos = result.codeRepositories ?? result.repositories ?? [];
 			const repoList: TemboRepositoryList = {
-				codeRepositories: Array.isArray(repos) ? repos : [],
+				codeRepositories: Array.isArray(repos) ? repos as TemboRepository[] : [],
 			};
 
 			logger.info("Repositories listed successfully", {
@@ -188,15 +264,15 @@ export class TemboService {
 		try {
 			logger.info("Fetching current user info");
 
-			const result = await this.client.me.retrieve();
+			const result = (await this.client.me.retrieve()) as TemboApiUserInfoResponse;
 
 			const duration = Date.now() - startTime;
 			logger.apiCall(endpoint, "GET", 200, duration);
 
 			const userInfo: TemboUserInfo = {
-				userId: (result as any).userId ?? "",
-				orgId: (result as any).orgId ?? (result as any).organizationId ?? "",
-				email: (result as any).email,
+				userId: result.userId ?? "",
+				orgId: result.orgId ?? result.organizationId ?? "",
+				email: result.email,
 			};
 
 			logger.info("User info retrieved successfully", {
@@ -215,7 +291,7 @@ export class TemboService {
 		}
 	}
 
-	private mapToTemboTask(apiResponse: any): TemboTask {
+	private mapToTemboTask(apiResponse: TemboApiTaskResponse): TemboTask {
 		return {
 			id: apiResponse.id ?? "",
 			title: apiResponse.title,

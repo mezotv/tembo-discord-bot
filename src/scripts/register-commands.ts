@@ -239,6 +239,19 @@ const commands: RESTPostAPIApplicationCommandsJSONBody[] = [
 			InteractionContextType.PrivateChannel,
 		],
 	},
+	{
+		name: "version",
+		description: "Display bot version information and stats",
+		integration_types: [
+			ApplicationIntegrationType.GuildInstall,
+			ApplicationIntegrationType.UserInstall,
+		],
+		contexts: [
+			InteractionContextType.Guild,
+			InteractionContextType.BotDM,
+			InteractionContextType.PrivateChannel,
+		],
+	},
 ];
 
 async function registerCommands() {

@@ -193,7 +193,7 @@ client.task.onStatusChange(task.id, (updatedTask) => {
 });
 ```
 
-**Built with:** Discord.js, Cloudflare Workers, Tembo SDK  
+**Built with:** Discord API v10 (discord-api-types + discord-interactions), Hono.js, Cloudflare Workers, Tembo SDK
 **Integration:** HTTP-based Discord interactions (serverless) 
 
 
