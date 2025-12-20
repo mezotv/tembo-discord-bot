@@ -63,7 +63,7 @@ export class VersionController extends BaseController {
 				},
 				{
 					name: "🛠️ Framework",
-					value: "Hono.js + Discord.js API",
+					value: "Hono.js + Discord API v10",
 					inline: true,
 				},
 				{

@@ -132,7 +132,7 @@ The bot uses Discord's subcommand structure for better organization:
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) installed
+- [Bun](https://bun.sh) v1.2.18 or later installed (for `bun pm version` support)
 - A [Discord Application](https://discord.com/developers/applications) with bot created
 - A [Tembo](https://tembo.io) account with API key
 - [Cloudflare Workers](https://workers.cloudflare.com) account
