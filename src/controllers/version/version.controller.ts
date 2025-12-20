@@ -5,9 +5,10 @@ import type {
 } from "discord-api-types/v10";
 import { BaseController } from "../base.controller";
 import type { Env } from "../../types";
+import packageJson from "../../../package.json";
 
 // Import version from package.json at build time
-const BOT_VERSION = "1.0.0";
+const BOT_VERSION = packageJson.version ?? "unknown";
 const START_TIME = Date.now();
 
 export class VersionController extends BaseController {
