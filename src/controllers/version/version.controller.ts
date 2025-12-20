@@ -67,8 +67,8 @@ export class VersionController extends BaseController {
 					inline: true,
 				},
 				{
-					name: "🔗 Tembo SDK Version",
-					value: "^0.1.2",
+					name: "🔗 Tembo SDK",
+					value: "Managed via package.json dependencies",
 					inline: true,
 				},
 				{
