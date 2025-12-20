@@ -71,7 +71,7 @@ export class RepositoriesController extends BaseController {
 		}
 
 		// Fallback to synchronous execution (might timeout)
-		const result = await this.temboService.listRepositories();
+		const result = await this.getTemboService().listRepositories();
 
 		const duration = Date.now() - startTime;
 		logger.command("repositories list", userId, true, duration);
@@ -119,7 +119,7 @@ export class RepositoriesController extends BaseController {
 		interactionToken: string,
 	): Promise<void> {
 		try {
-			const result = await this.temboService.listRepositories();
+			const result = await this.getTemboService().listRepositories();
 			const duration = Date.now() - startTime;
 			logger.command("repositories list", userId, true, duration);
 

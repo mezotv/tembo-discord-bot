@@ -1,10 +1,14 @@
-import type { APIInteractionResponse, APIEmbed } from "discord-api-types/v10";
+import type {
+	APIInteractionResponse,
+	APIEmbed,
+	RESTPatchAPIWebhookWithTokenMessageJSONBody,
+} from "discord-api-types/v10";
 import { logger } from "./logger";
 
 export async function updateInteractionResponse(
 	applicationId: string,
 	interactionToken: string,
-	body: any,
+	body: RESTPatchAPIWebhookWithTokenMessageJSONBody,
 ): Promise<void> {
 	const url = `https://discord.com/api/v10/webhooks/${applicationId}/${interactionToken}/messages/@original`;
 

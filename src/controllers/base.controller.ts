@@ -20,6 +20,17 @@ import type { Env } from "../types";
 export abstract class BaseController {
 	constructor(protected readonly temboService: TemboService | null) {}
 
+	/**
+	 * Gets the TemboService instance, throwing an error if it's null.
+	 * Use this in controllers that require TemboService.
+	 */
+	protected getTemboService(): TemboService {
+		if (!this.temboService) {
+			throw new Error("TemboService is required for this operation");
+		}
+		return this.temboService;
+	}
+
 	protected getOptionsMap(
 		options: APIApplicationCommandInteractionDataOption[] | undefined,
 	): Record<string, unknown> {

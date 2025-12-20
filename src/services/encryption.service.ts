@@ -75,8 +75,8 @@ export class EncryptionService {
 			// Convert to base64 for storage
 			return {
 				ciphertext: this.arrayBufferToBase64(ciphertextBuffer),
-				iv: this.arrayBufferToBase64(iv),
-				salt: this.arrayBufferToBase64(salt),
+				iv: this.arrayBufferToBase64(iv.buffer as ArrayBuffer),
+				salt: this.arrayBufferToBase64(salt.buffer as ArrayBuffer),
 			};
 		} catch (error) {
 			throw new Error(
@@ -183,7 +183,10 @@ export class EncryptionService {
 		const bytes = new Uint8Array(buffer);
 		let binary = "";
 		for (let i = 0; i < bytes.byteLength; i++) {
-			binary += String.fromCharCode(bytes[i]);
+			const byte = bytes[i];
+			if (byte !== undefined) {
+				binary += String.fromCharCode(byte);
+			}
 		}
 		return btoa(binary);
 	}
@@ -195,7 +198,10 @@ export class EncryptionService {
 		const binary = atob(base64);
 		const bytes = new Uint8Array(binary.length);
 		for (let i = 0; i < binary.length; i++) {
-			bytes[i] = binary.charCodeAt(i);
+			const charCode = binary.charCodeAt(i);
+			if (!isNaN(charCode)) {
+				bytes[i] = charCode;
+			}
 		}
 		return bytes.buffer;
 	}
