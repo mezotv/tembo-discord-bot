@@ -27,32 +27,25 @@ import type { Env, ListTasksParams, SearchTasksParams } from "../../types";
 import { updateInteractionResponse } from "../../utils/discord";
 
 const AGENTS = [
-	{ name: "Claude Code (Default) - Balanced", value: "claudeCode:claude-4-5-sonnet" },
-	{ name: "Claude Code - Fastest", value: "claudeCode:claude-4-5-haiku" },
-	{ name: "Claude Code - Complex Tasks", value: "claudeCode:claude-4.1-opus" },
-	{ name: "Claude Code - Efficient", value: "claudeCode:claude-4-sonnet" },
+	{ name: "Claude Code - Opus 4.5", value: "claudeCode:opus-4-5" },
+	{ name: "Claude Code - Sonnet 4.5", value: "claudeCode:sonnet-4-5" },
+	{ name: "Claude Code - Opus 4.1", value: "claudeCode:opus-4-1" },
+	{ name: "Claude Code - Haiku 4.5", value: "claudeCode:haiku-4-5" },
+	{ name: "Claude Code - Sonnet 4", value: "claudeCode:sonnet-4" },
 
-	{ name: "Codex (Default) - Balanced", value: "codex:gpt-5-medium" },
-	{ name: "Codex - Fastest", value: "codex:gpt-5-minimal" },
-	{ name: "Codex - Quick", value: "codex:gpt-5-low" },
-	{ name: "Codex - Deep Reasoning", value: "codex:gpt-5-high" },
-	{ name: "Codex - Code Gen", value: "codex:gpt-5-codex" },
+	{ name: "OpenCode - Opus 4.5", value: "opencode:opus-4-5" },
+	{ name: "OpenCode - Sonnet 4.5", value: "opencode:sonnet-4-5" },
+	{ name: "OpenCode - Opus 4.1", value: "opencode:opus-4-1" },
+	{ name: "OpenCode - Haiku 4.5", value: "opencode:haiku-4-5" },
+	{ name: "OpenCode - Sonnet 4", value: "opencode:sonnet-4" },
 
-	{ name: "Opencode (Default) - Balanced", value: "opencode:claude-4-5-sonnet" },
-	{ name: "Opencode - Fastest", value: "opencode:claude-4-5-haiku" },
-	{ name: "Opencode - Complex Tasks", value: "opencode:claude-4.1-opus" },
-	{ name: "Opencode - Efficient", value: "opencode:claude-4-sonnet" },
+	{ name: "Cursor - Opus 4.5", value: "cursor:opus-4-5" },
+	{ name: "Cursor - Sonnet 4.5", value: "cursor:sonnet-4-5" },
+	{ name: "Cursor - Opus 4.1", value: "cursor:opus-4-1" },
+	{ name: "Cursor - Haiku 4.5", value: "cursor:haiku-4-5" },
+	{ name: "Cursor - Sonnet 4", value: "cursor:sonnet-4" },
 
-	{ name: "Amp - Smart Detection", value: "amp:claude-4-5-sonnet" },
-
-	{ name: "Cursor (Default) - Balanced", value: "cursor:claude-4-5-sonnet" },
-	{ name: "Cursor - Complex Tasks", value: "cursor:claude-4.1-opus" },
-	{ name: "Cursor - GPT-5.1", value: "cursor:gpt-5.1" },
-	{ name: "Cursor - GPT-5.1 Code", value: "cursor:gpt-5.1-codex" },
-	{ name: "Cursor - GPT-5.1 High", value: "cursor:gpt-5.1-codex-high" },
-	{ name: "Cursor - Gemini 3 Pro", value: "cursor:gemini-3-pro" },
-	{ name: "Cursor - Composer", value: "cursor:composer-1" },
-	{ name: "Cursor - Grok", value: "cursor:grok" },
+	{ name: "Amp - Opus 4.5", value: "amp:opus-4-5" },
 ];
 
 function getStatusEmoji(status: string | undefined): string {
