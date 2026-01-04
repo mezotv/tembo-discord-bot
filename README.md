@@ -6,6 +6,8 @@ A production-ready Discord bot built on Cloudflare Workers that integrates with 
 
 Link to add the bot: [Install](https://discord.com/oauth2/authorize?client_id=1438564757358645298)
 
+Official Docs for the Bot: [Tembo Discord Bot Doc](https://docs.tembo.io/integrations/discord)
+
 ---
 
 ## Table of Contents
